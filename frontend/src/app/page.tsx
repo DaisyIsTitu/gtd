@@ -1,63 +1,41 @@
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Home | Todo Time-blocking',
-  description: '할 일을 스마트하게 관리하고 자동으로 최적의 시간에 배치하세요',
-};
+import { Metadata } from 'next';
+import WeeklyCalendar from '@/components/calendar/WeeklyCalendar';
+import { mockTodos, mockSchedules } from '@/lib/mockData';
+import { TodoSchedule } from '@/types';
 
 export default function HomePage() {
+  const handleScheduleClick = (schedule: TodoSchedule) => {
+    console.log('Schedule clicked:', schedule);
+    // TODO: 스케줄 상세 모달 또는 편집 기능 구현
+  };
+
+  const handleTimeSlotClick = (date: Date, hour: number, minute: number) => {
+    console.log('Time slot clicked:', { date, hour, minute });
+    // TODO: 새 Todo 생성 또는 드래그 앤 드롭 기능 구현
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Todo Time-blocking
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배치하는 
-            스마트 시간 관리 웹 애플리케이션
+          <p className="text-gray-600">
+            Akiflow 스타일의 주간 캘린더로 일정을 효율적으로 관리하세요
           </p>
         </header>
-
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Calendar Preview */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  📅 주간 캘린더
-                </h2>
-                <div className="bg-gray-50 rounded-lg p-6 h-64 flex items-center justify-center">
-                  <p className="text-gray-500">캘린더 UI가 여기에 표시됩니다</p>
-                </div>
-              </div>
-
-              {/* Todo Sidebar Preview */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  📋 Todo 목록
-                </h2>
-                <div className="bg-gray-50 rounded-lg p-6 h-64 flex items-center justify-center">
-                  <p className="text-gray-500">Todo 목록이 여기에 표시됩니다</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 text-center">
-              <div className="inline-flex items-center gap-4">
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                  ✅ NextJS 13+ 설정 완료
-                </span>
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                  🚀 App Router 활성화
-                </span>
-                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                  🎨 TypeScript + TailwindCSS
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
+        <main>
+          <WeeklyCalendar
+            schedules={mockSchedules}
+            todos={mockTodos}
+            onScheduleClick={handleScheduleClick}
+            onTimeSlotClick={handleTimeSlotClick}
+          />
+        </main>
       </div>
     </div>
   );
