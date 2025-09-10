@@ -118,3 +118,65 @@ a {
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
+
+/* 드래그 앤 드롭 스타일 */
+.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  z-index: 1000;
+}
+
+.drag-over {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.drop-zone {
+  transition: all 0.2s ease-in-out;
+}
+
+.drop-zone.drag-over {
+  background-color: #dbeafe;
+  border: 2px dashed #3b82f6;
+}
+
+/* 필터 버튼 애니메이션 */
+.filter-button {
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-button:hover {
+  transform: translateY(-1px);
+}
+
+/* 사이드바 스크롤 */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 라인 클램프 유틸리티 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
