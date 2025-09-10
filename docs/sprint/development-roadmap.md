@@ -68,10 +68,10 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 
 ### Frontend 작업 (NextJS + TypeScript)
 #### 환경 구성
-- [ ] S1.F.1 NextJS 13+ 프로젝트 초기 설정
-- [ ] S1.F.2 TypeScript 구성 및 타입 정의
-- [ ] S1.F.3 TailwindCSS 또는 CSS 프레임워크 설정
-- [ ] S1.F.4 ESLint, Prettier 코드 품질 도구 설정
+- [x] S1.F.1 NextJS 13+ 프로젝트 초기 설정
+- [x] S1.F.2 TypeScript 구성 및 타입 정의
+- [x] S1.F.3 TailwindCSS 또는 CSS 프레임워크 설정
+- [x] S1.F.4 ESLint, Prettier 코드 품질 도구 설정
 
 #### 핵심 UI 컴포넌트
 - [ ] S1.F.5 주간 캘린더 UI 컴포넌트 (정적, 그리드 레이아웃)
@@ -80,7 +80,7 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 - [ ] S1.F.8 Mock 데이터 구조 정의
 
 #### Mock API 설계
-- [ ] S1.F.9 Todo, Calendar Event 타입 정의
+- [x] S1.F.9 Todo, Calendar Event 타입 정의
 - [ ] S1.F.10 Mock API 함수 작성 (localStorage 활용)
 - [ ] S1.F.11 기본 CRUD 동작 시뮬레이션
 
