@@ -1,2 +1,3 @@
 - 모든 문서는 한국어로 작성해줘
 - 모든 문서에 목차를 적어줘
+- 작업이 끝나면 /docs/spring/development-roadmap.md의 체크리스트에 체크해줘.
