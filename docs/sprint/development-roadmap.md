@@ -86,10 +86,10 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 
 ### Backend 작업 (Spring Boot + Kotlin)
 #### 프로젝트 설정
-- [ ] S1.B.1 Spring Boot 3+ 프로젝트 초기 설정
-- [ ] S1.B.2 Kotlin 설정 및 코딩 스타일 가이드
-- [ ] S1.B.3 Gradle 빌드 설정 및 의존성 관리
-- [ ] S1.B.4 개발 환경별 설정 파일 구성
+- [x] S1.B.1 Spring Boot 3+ 프로젝트 초기 설정
+- [x] S1.B.2 Kotlin 설정 및 코딩 스타일 가이드
+- [x] S1.B.3 Gradle 빌드 설정 및 의존성 관리
+- [x] S1.B.4 개발 환경별 설정 파일 구성
 
 #### 데이터베이스 설계
 - [ ] S1.B.5 PostgreSQL 연결 및 JPA 설정
