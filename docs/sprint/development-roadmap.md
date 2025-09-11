@@ -81,8 +81,8 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 
 #### Mock API 설계
 - [x] S1.F.9 Todo, Calendar Event 타입 정의
-- [ ] S1.F.10 Mock API 함수 작성 (localStorage 활용)
-- [ ] S1.F.11 기본 CRUD 동작 시뮬레이션
+- [x] S1.F.10 Mock API 함수 작성 (localStorage 활용)
+- [x] S1.F.11 기본 CRUD 동작 시뮬레이션
 
 ### Backend 작업 (Spring Boot + Kotlin)
 #### 프로젝트 설정
