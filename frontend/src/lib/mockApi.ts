@@ -133,7 +133,7 @@ const createApiResponse = <T>(
         code: 'MOCK_API_ERROR',
         message: message || '알 수 없는 오류가 발생했습니다.'
       }
-    };
+    } as ApiResponse<T>;
   }
 };
 
@@ -228,7 +228,7 @@ export const todoApi = {
       const todo = todos.find(t => t.id === id);
       
       if (!todo) {
-        return createApiResponse(null, false, '해당 할 일을 찾을 수 없습니다.');
+        return createApiResponse<Todo>(null, false, '해당 할 일을 찾을 수 없습니다.');
       }
 
       // 날짜 문자열을 Date 객체로 변환
@@ -241,7 +241,7 @@ export const todoApi = {
 
       return createApiResponse(todoWithDates, true, '할 일 조회가 완료되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, 'Todo 조회 중 오류가 발생했습니다.');
+      return createApiResponse<Todo>(null, false, 'Todo 조회 중 오류가 발생했습니다.');
     }
   },
 
@@ -272,7 +272,7 @@ export const todoApi = {
 
       return createApiResponse(newTodo, true, '새로운 할 일이 생성되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, 'Todo 생성 중 오류가 발생했습니다.');
+      return createApiResponse<Todo>(null, false, 'Todo 생성 중 오류가 발생했습니다.');
     }
   },
 
@@ -285,7 +285,7 @@ export const todoApi = {
       const todoIndex = todos.findIndex(t => t.id === id);
       
       if (todoIndex === -1) {
-        return createApiResponse(null, false, '해당 할 일을 찾을 수 없습니다.');
+        return createApiResponse<any>(null, false, '해당 할 일을 찾을 수 없습니다.');
       }
 
       const updatedTodo = {
@@ -300,7 +300,7 @@ export const todoApi = {
 
       return createApiResponse(updatedTodo, true, '할 일이 성공적으로 수정되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, 'Todo 수정 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, 'Todo 수정 중 오류가 발생했습니다.');
     }
   },
 
@@ -313,7 +313,7 @@ export const todoApi = {
       const todoIndex = todos.findIndex(t => t.id === id);
       
       if (todoIndex === -1) {
-        return createApiResponse(null, false, '해당 할 일을 찾을 수 없습니다.');
+        return createApiResponse<any>(null, false, '해당 할 일을 찾을 수 없습니다.');
       }
 
       todos.splice(todoIndex, 1);
@@ -324,9 +324,9 @@ export const todoApi = {
       const filteredSchedules = schedules.filter(s => s.todoId !== id);
       storageUtils.setItem(STORAGE_KEYS.SCHEDULES, filteredSchedules);
 
-      return createApiResponse(null, true, '할 일이 성공적으로 삭제되었습니다.');
+      return createApiResponse<void>(undefined as any, true, '할 일이 성공적으로 삭제되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, 'Todo 삭제 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, 'Todo 삭제 중 오류가 발생했습니다.');
     }
   },
 
@@ -339,7 +339,7 @@ export const todoApi = {
       const todoIndex = todos.findIndex(t => t.id === id);
       
       if (todoIndex === -1) {
-        return createApiResponse(null, false, '해당 할 일을 찾을 수 없습니다.');
+        return createApiResponse<any>(null, false, '해당 할 일을 찾을 수 없습니다.');
       }
 
       todos[todoIndex] = {
@@ -352,7 +352,7 @@ export const todoApi = {
 
       return createApiResponse(todos[todoIndex], true, `할 일 상태가 ${status}로 변경되었습니다.`);
     } catch (error) {
-      return createApiResponse(null, false, 'Todo 상태 변경 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, 'Todo 상태 변경 중 오류가 발생했습니다.');
     }
   }
 };
@@ -429,7 +429,7 @@ export const scheduleApi = {
 
       return createApiResponse(newSchedule, true, '새로운 스케줄이 생성되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, '스케줄 생성 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, '스케줄 생성 중 오류가 발생했습니다.');
     }
   },
 
@@ -442,15 +442,15 @@ export const scheduleApi = {
       const scheduleIndex = schedules.findIndex(s => s.id === id);
       
       if (scheduleIndex === -1) {
-        return createApiResponse(null, false, '해당 스케줄을 찾을 수 없습니다.');
+        return createApiResponse<any>(null, false, '해당 스케줄을 찾을 수 없습니다.');
       }
 
       schedules.splice(scheduleIndex, 1);
       storageUtils.setItem(STORAGE_KEYS.SCHEDULES, schedules);
 
-      return createApiResponse(null, true, '스케줄이 성공적으로 삭제되었습니다.');
+      return createApiResponse<void>(undefined as any, true, '스케줄이 성공적으로 삭제되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, '스케줄 삭제 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, '스케줄 삭제 중 오류가 발생했습니다.');
     }
   }
 };
@@ -468,7 +468,7 @@ export const schedulingApi = {
       // 요청된 Todo들 찾기
       const targetTodos = todos.filter(todo => request.todoIds.includes(todo.id));
       const newSchedules: TodoSchedule[] = [];
-      const conflicts = [];
+      const conflicts: any[] = [];
       
       // 간단한 스케줄링 로직 (실제로는 더 복잡할 것)
       let currentTime = new Date();
@@ -518,7 +518,7 @@ export const schedulingApi = {
       
       return createApiResponse(result, true, '자동 스케줄링이 완료되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, '자동 스케줄링 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, '자동 스케줄링 중 오류가 발생했습니다.');
     }
   }
 };
@@ -531,9 +531,9 @@ export const mockApiUtils = {
     
     try {
       storageUtils.clear();
-      return createApiResponse(null, true, '모든 데이터가 초기화되었습니다.');
+      return createApiResponse<void>(undefined as any, true, '모든 데이터가 초기화되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, '데이터 초기화 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, '데이터 초기화 중 오류가 발생했습니다.');
     }
   },
 
@@ -547,9 +547,9 @@ export const mockApiUtils = {
       storageUtils.setItem(STORAGE_KEYS.LAST_TODO_ID, mockTodos.length);
       storageUtils.setItem(STORAGE_KEYS.LAST_SCHEDULE_ID, mockSchedules.length);
       
-      return createApiResponse(null, true, '샘플 데이터가 로드되었습니다.');
+      return createApiResponse<void>(undefined as any, true, '샘플 데이터가 로드되었습니다.');
     } catch (error) {
-      return createApiResponse(null, false, '샘플 데이터 로드 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, '샘플 데이터 로드 중 오류가 발생했습니다.');
     }
   },
 
@@ -577,7 +577,7 @@ export const mockApiUtils = {
       
       return createApiResponse(info, true, 'localStorage 정보 조회 완료');
     } catch (error) {
-      return createApiResponse(null, false, 'localStorage 정보 조회 중 오류가 발생했습니다.');
+      return createApiResponse<any>(null, false, 'localStorage 정보 조회 중 오류가 발생했습니다.');
     }
   }
 };

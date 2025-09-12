@@ -22,7 +22,7 @@ export default function TodoSidebar({
   const { setFilters } = useTodoStore();
   const { isSidebarCollapsed, setSidebarCollapsed } = useTodoStore(state => ({
     isSidebarCollapsed: false, // We can add this to UI store later if needed
-    setSidebarCollapsed: () => {}, // Placeholder for now
+    setSidebarCollapsed: (collapsed: boolean) => {}, // Placeholder for now
   }));
 
   const handleFiltersChange = (newFilters: any) => {

@@ -26,7 +26,7 @@ export const localStorageInspector = {
   // 용량 확인
   getUsage: () => {
     let total = 0;
-    for (let key in localStorage) {
+    for (const key in localStorage) {
       if (localStorage.hasOwnProperty(key)) {
         total += localStorage.getItem(key)?.length || 0;
       }

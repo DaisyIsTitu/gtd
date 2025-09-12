@@ -1,7 +1,7 @@
 // 스케줄링 서비스 - Mock API와 연동하여 자동 스케줄링 기능 제공
 
 import { Todo, TodoSchedule, AvailableSlot, SchedulingRequest, SchedulingResult } from '@/types';
-import { schedulingApi } from '@/lib/mockApi';
+import { scheduleApi, schedulingApi } from '@/lib/mockApi';
 import { 
   WORK_HOURS, 
   SCHEDULING, 
@@ -124,7 +124,7 @@ class SchedulingService {
 
     try {
       // Mock API를 통해 스케줄 생성
-      const result = await schedulingApi.createSchedule(newSchedule);
+      const result = await scheduleApi.createSchedule(newSchedule);
       
       if (result.success && result.data) {
         return {

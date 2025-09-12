@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { Todo, FilterOptions, CreateTodoForm, UpdateTodoForm, TodoStatus, TodoSchedule } from '@/types';
-import { todoApi, schedulingApi } from '@/lib/mockApi';
+import { todoApi, schedulingApi, scheduleApi } from '@/lib/mockApi';
 import { schedulingService } from '@/lib/schedulingService';
 
 interface TodoState {
@@ -353,7 +353,10 @@ export const useTodoStore = create<TodoState>()(
           set({ schedulingLoading: true, schedulingError: null }, false, 'fetchSchedules:start');
           
           try {
-            const response = await schedulingApi.getSchedules();
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7); // 일주일 전부터
+            const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7); // 일주일 후까지
+            const response = await scheduleApi.getSchedules(startDate, endDate);
             console.log('🔍 schedulingApi.getSchedules 응답:', response);
             
             if (response.success && response.data) {

@@ -31,16 +31,6 @@ export default function HomePage() {
   }));
 
   console.log('🚀 HomePage 컴포넌트 렌더링');
-  console.log('🚀 fetchTodos 함수 타입:', typeof fetchTodos);
-  console.log('🚀 fetchTodos:', fetchTodos);
-  
-  // 직접 fetchTodos 호출 테스트
-  console.log('🧪 직접 fetchTodos 호출 테스트 시작');
-  fetchTodos().then(() => {
-    console.log('🧪 직접 fetchTodos 완료');
-  }).catch(error => {
-    console.error('🧪 직접 fetchTodos 에러:', error);
-  });
   
   const todos = useFilteredTodos();
   const waitingTodos = useWaitingTodos();

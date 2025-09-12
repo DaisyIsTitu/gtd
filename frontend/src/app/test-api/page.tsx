@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { todoApi, scheduleApi, mockApiUtils } from '@/lib/mockApi';
 import { Todo, CreateTodoForm } from '@/types';
 
@@ -15,7 +15,7 @@ export default function TestApiPage() {
   };
 
   // Todo 목록 로드
-  const loadTodos = async () => {
+  const loadTodos = useCallback(async () => {
     setLoading(true);
     try {
       const result = await todoApi.getTodos(1, 20);
@@ -30,7 +30,7 @@ export default function TestApiPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 새 Todo 생성
   const createTodo = async () => {
@@ -153,7 +153,7 @@ export default function TestApiPage() {
   // 페이지 로드 시 초기 데이터 로드
   useEffect(() => {
     loadTodos();
-  }, []);
+  }, [loadTodos]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
