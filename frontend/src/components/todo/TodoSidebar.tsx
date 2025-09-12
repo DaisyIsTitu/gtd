@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Todo, FilterOptions } from '@/types';
+import { useTodoFilters, useTodoStore } from '@/store';
+import { Todo } from '@/types';
 import TodoFilter from './TodoFilter';
 import TodoList from './TodoList';
 
@@ -18,16 +18,14 @@ export default function TodoSidebar({
   onDragStart,
   onAddTodo
 }: TodoSidebarProps) {
-  const [filters, setFilters] = useState<FilterOptions>({
-    categories: [],
-    priorities: [],
-    statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'], // 기본적으로 활성 상태만 표시
-    tags: [],
-  });
+  const filters = useTodoFilters();
+  const { setFilters } = useTodoStore();
+  const { isSidebarCollapsed, setSidebarCollapsed } = useTodoStore(state => ({
+    isSidebarCollapsed: false, // We can add this to UI store later if needed
+    setSidebarCollapsed: () => {}, // Placeholder for now
+  }));
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleFiltersChange = (newFilters: FilterOptions) => {
+  const handleFiltersChange = (newFilters: any) => {
     setFilters(newFilters);
   };
 
@@ -51,11 +49,13 @@ export default function TodoSidebar({
     ).length;
   };
 
+  const isCollapsed = false; // We'll implement this later with UI store
+
   if (isCollapsed) {
     return (
       <div className="w-12 bg-white border-r border-gray-200 flex flex-col items-center py-4">
         <button
-          onClick={() => setIsCollapsed(false)}
+          onClick={() => setSidebarCollapsed(false)}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
           title="할 일 목록 열기"
         >
@@ -92,9 +92,9 @@ export default function TodoSidebar({
               </svg>
             </button>
             
-            {/* 접기 버튼 */}
+            {/* 접기 버튼 (나중에 구현) */}
             <button
-              onClick={() => setIsCollapsed(true)}
+              onClick={() => setSidebarCollapsed(true)}
               className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
               title="사이드바 접기"
             >

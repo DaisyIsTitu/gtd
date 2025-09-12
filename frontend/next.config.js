@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   typescript: {
     // TypeScript 에러가 있어도 빌드를 계속 진행 (개발 단계에서만)
     ignoreBuildErrors: false,
