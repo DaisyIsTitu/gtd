@@ -8,10 +8,17 @@ export {
   useFilteredTodos,
   useActiveTodos,
   useCompletedTodos,
+  useWaitingTodos,
   useTodoLoading,
   useTodoError,
   useTodoFilters,
   useSelectedTodo,
+  useSchedules,
+  useSchedulingLoading,
+  useSchedulingError,
+  useLastSchedulingResult,
+  useAutoSchedule,
+  useSchedulingActions,
 } from './todoStore';
 
 export {

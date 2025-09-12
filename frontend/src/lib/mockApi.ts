@@ -24,6 +24,12 @@ export const storageUtils = {
   // 데이터 저장
   setItem: <T>(key: string, data: T): void => {
     try {
+      // SSR 호환성: localStorage가 사용 가능한지 확인
+      if (typeof window === 'undefined' || !window.localStorage) {
+        console.warn('localStorage가 사용할 수 없습니다. 저장이 생략됩니다.');
+        return;
+      }
+      
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
       console.error('localStorage 저장 오류:', error);
@@ -33,6 +39,19 @@ export const storageUtils = {
   // 데이터 불러오기
   getItem: <T>(key: string, defaultValue: T): T => {
     try {
+      // SSR 호환성: localStorage가 사용 가능한지 확인
+      if (typeof window === 'undefined' || !window.localStorage) {
+        console.warn('localStorage가 사용할 수 없습니다. SSR 환경이거나 브라우저에서 비활성화됨');
+        // SSR 환경에서는 기본 Mock 데이터 반환
+        if (key === STORAGE_KEYS.TODOS) {
+          return mockTodos as T;
+        }
+        if (key === STORAGE_KEYS.SCHEDULES) {
+          return mockSchedules as T;
+        }
+        return defaultValue;
+      }
+      
       const item = localStorage.getItem(key);
       if (item === null) {
         // 초기 데이터가 없으면 기본 Mock 데이터로 초기화

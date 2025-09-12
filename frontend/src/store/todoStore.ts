@@ -1,40 +1,57 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { Todo, FilterOptions, CreateTodoForm, UpdateTodoForm, TodoStatus } from '@/types';
-import { todoApi } from '@/lib/mockApi';
+import { Todo, FilterOptions, CreateTodoForm, UpdateTodoForm, TodoStatus, TodoSchedule } from '@/types';
+import { todoApi, schedulingApi } from '@/lib/mockApi';
+import { schedulingService } from '@/lib/schedulingService';
 
 interface TodoState {
   // State
   todos: Todo[];
+  schedules: TodoSchedule[];
   loading: boolean;
   error: string | null;
   filters: FilterOptions;
   selectedTodo: Todo | null;
   
+  // Scheduling State
+  schedulingLoading: boolean;
+  schedulingError: string | null;
+  lastSchedulingResult: any | null;
+  
   // Computed values (calculated after data changes)
   filteredTodos: Todo[];
   activeTodos: Todo[];
   completedTodos: Todo[];
+  waitingTodos: Todo[];
   
   // Actions
   updateComputedValues: () => void;
   setTodos: (todos: Todo[]) => void;
+  setSchedules: (schedules: TodoSchedule[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setFilters: (filters: FilterOptions) => void;
   setSelectedTodo: (todo: Todo | null) => void;
+  setSchedulingLoading: (loading: boolean) => void;
+  setSchedulingError: (error: string | null) => void;
   
   // API Actions
   fetchTodos: () => Promise<void>;
+  fetchSchedules: () => Promise<void>;
   createTodo: (todoData: CreateTodoForm) => Promise<Todo | null>;
   updateTodo: (id: string, updateData: UpdateTodoForm) => Promise<Todo | null>;
   deleteTodo: (id: string) => Promise<boolean>;
   updateTodoStatus: (id: string, status: TodoStatus) => Promise<Todo | null>;
   
+  // Scheduling Actions
+  autoScheduleWaitingTodos: () => Promise<boolean>;
+  clearSchedulingError: () => void;
+  
   // Utility Actions
   clearError: () => void;
   resetFilters: () => void;
   getTodoById: (id: string) => Todo | undefined;
+  getSchedulesForTodo: (todoId: string) => TodoSchedule[];
 }
 
 const initialFilters: FilterOptions = {
@@ -50,13 +67,18 @@ export const useTodoStore = create<TodoState>()(
       (set, get) => ({
         // Initial State
         todos: [],
+        schedules: [],
         loading: false,
         error: null,
         filters: initialFilters,
         selectedTodo: null,
+        schedulingLoading: false,
+        schedulingError: null,
+        lastSchedulingResult: null,
         filteredTodos: [],
         activeTodos: [],
         completedTodos: [],
+        waitingTodos: [],
 
         // Helper function to update computed values
         updateComputedValues: () => {
@@ -115,11 +137,15 @@ export const useTodoStore = create<TodoState>()(
           // Calculate completedTodos
           const completedTodos = todos.filter(todo => todo.status === 'COMPLETED');
           
+          // Calculate waitingTodos
+          const waitingTodos = todos.filter(todo => todo.status === 'WAITING');
+          
           console.log('🔍 필터링 후 todos 개수:', filteredTodos.length);
           console.log('🔍 활성 todos 개수:', activeTodos.length);
           console.log('🔍 완료 todos 개수:', completedTodos.length);
+          console.log('🔍 대기 todos 개수:', waitingTodos.length);
           
-          set({ filteredTodos, activeTodos, completedTodos }, false, 'updateComputedValues');
+          set({ filteredTodos, activeTodos, completedTodos, waitingTodos }, false, 'updateComputedValues');
         },
 
         // Basic Setters
@@ -134,6 +160,9 @@ export const useTodoStore = create<TodoState>()(
           get().updateComputedValues();
         },
         setSelectedTodo: (selectedTodo) => set({ selectedTodo }, false, 'setSelectedTodo'),
+        setSchedules: (schedules) => set({ schedules }, false, 'setSchedules'),
+        setSchedulingLoading: (loading) => set({ schedulingLoading: loading }, false, 'setSchedulingLoading'),
+        setSchedulingError: (error) => set({ schedulingError: error }, false, 'setSchedulingError'),
 
         // API Actions
         fetchTodos: async () => {
@@ -318,6 +347,86 @@ export const useTodoStore = create<TodoState>()(
           }
         },
 
+        // Scheduling API Actions
+        fetchSchedules: async () => {
+          console.log('🔍 fetchSchedules 호출 시작');
+          set({ schedulingLoading: true, schedulingError: null }, false, 'fetchSchedules:start');
+          
+          try {
+            const response = await schedulingApi.getSchedules();
+            console.log('🔍 schedulingApi.getSchedules 응답:', response);
+            
+            if (response.success && response.data) {
+              console.log('🔍 성공! schedules 개수:', response.data.length);
+              set({ 
+                schedules: response.data, 
+                schedulingLoading: false, 
+                schedulingError: null 
+              }, false, 'fetchSchedules:success');
+            } else {
+              set({ 
+                schedulingLoading: false, 
+                schedulingError: response.message || '스케줄 목록을 불러오는데 실패했습니다.' 
+              }, false, 'fetchSchedules:error');
+            }
+          } catch (error) {
+            console.error('🔍 fetchSchedules 에러:', error);
+            set({ 
+              schedulingLoading: false, 
+              schedulingError: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
+            }, false, 'fetchSchedules:catch');
+          }
+        },
+
+        autoScheduleWaitingTodos: async () => {
+          console.log('🔍 autoScheduleWaitingTodos 호출 시작');
+          set({ schedulingLoading: true, schedulingError: null }, false, 'autoSchedule:start');
+          
+          try {
+            const { todos, schedules } = get();
+            console.log('🔍 현재 todos:', todos.length);
+            console.log('🔍 현재 schedules:', schedules.length);
+            
+            // 스케줄링 서비스를 통해 자동 배치 실행
+            const result = await schedulingService.autoScheduleWaitingTodos(todos, schedules);
+            console.log('🔍 스케줄링 결과:', result);
+            
+            if (result.success) {
+              // 새로운 스케줄이 생성되었으면 데이터 새로고침
+              if (result.scheduledTodos && result.scheduledTodos.length > 0) {
+                await get().fetchTodos();
+                await get().fetchSchedules();
+              }
+              
+              set({ 
+                schedulingLoading: false, 
+                schedulingError: null,
+                lastSchedulingResult: result 
+              }, false, 'autoSchedule:success');
+              
+              return true;
+            } else {
+              set({ 
+                schedulingLoading: false, 
+                schedulingError: result.message || '자동 스케줄링에 실패했습니다.',
+                lastSchedulingResult: result
+              }, false, 'autoSchedule:error');
+              
+              return false;
+            }
+          } catch (error) {
+            console.error('🔍 autoScheduleWaitingTodos 에러:', error);
+            set({ 
+              schedulingLoading: false, 
+              schedulingError: error instanceof Error ? error.message : '자동 스케줄링 중 오류가 발생했습니다.' 
+            }, false, 'autoSchedule:catch');
+            
+            return false;
+          }
+        },
+
+        clearSchedulingError: () => set({ schedulingError: null }, false, 'clearSchedulingError'),
+
         // Utility Actions
         clearError: () => set({ error: null }, false, 'clearError'),
         
@@ -326,6 +435,11 @@ export const useTodoStore = create<TodoState>()(
         getTodoById: (id) => {
           const { todos } = get();
           return todos.find(todo => todo.id === id);
+        },
+
+        getSchedulesForTodo: (todoId) => {
+          const { schedules } = get();
+          return schedules.filter(schedule => schedule.todoId === todoId);
         },
       }),
       {
@@ -344,10 +458,78 @@ export const useTodoStore = create<TodoState>()(
 );
 
 // Selector hooks for performance optimization
-export const useFilteredTodos = () => useTodoStore(state => state.filteredTodos);
-export const useActiveTodos = () => useTodoStore(state => state.activeTodos);
-export const useCompletedTodos = () => useTodoStore(state => state.completedTodos);
+export const useFilteredTodos = () => useTodoStore(state => {
+  console.log('🔍 filteredTodos getter 호출됨');
+  const { todos, filters } = state;
+  console.log('🔍 todos 개수:', todos.length);
+  console.log('🔍 filters:', filters);
+  
+  // Calculate filteredTodos
+  const filteredTodos = todos.filter(todo => {
+    // 카테고리 필터
+    if (filters.categories.length > 0 && !filters.categories.includes(todo.category)) {
+      return false;
+    }
+
+    // 우선순위 필터
+    if (filters.priorities.length > 0 && !filters.priorities.includes(todo.priority)) {
+      return false;
+    }
+
+    // 상태 필터
+    if (filters.statuses.length > 0 && !filters.statuses.includes(todo.status)) {
+      return false;
+    }
+
+    // 태그 필터
+    if (filters.tags.length > 0 && !filters.tags.some(tag => todo.tags.includes(tag))) {
+      return false;
+    }
+
+    return true;
+  });
+
+  console.log('🔍 필터링 후 todos 개수:', filteredTodos.length);
+  console.log('🔍 필터링된 첫 번째 todo:', filteredTodos[0]);
+
+  return filteredTodos;
+});
+export const useActiveTodos = () => useTodoStore(state => {
+  const { todos } = state;
+  return todos.filter(todo => ['SCHEDULED', 'IN_PROGRESS'].includes(todo.status));
+});
+
+export const useCompletedTodos = () => useTodoStore(state => {
+  const { todos } = state;
+  return todos.filter(todo => todo.status === 'COMPLETED');
+});
+
+export const useWaitingTodos = () => useTodoStore(state => {
+  const { todos } = state;
+  return todos.filter(todo => todo.status === 'WAITING');
+});
 export const useTodoLoading = () => useTodoStore(state => state.loading);
 export const useTodoError = () => useTodoStore(state => state.error);
 export const useTodoFilters = () => useTodoStore(state => state.filters);
 export const useSelectedTodo = () => useTodoStore(state => state.selectedTodo);
+
+// Scheduling-related selector hooks
+export const useSchedules = () => useTodoStore(state => state.schedules);
+export const useSchedulingLoading = () => useTodoStore(state => state.schedulingLoading);
+export const useSchedulingError = () => useTodoStore(state => state.schedulingError);
+export const useLastSchedulingResult = () => useTodoStore(state => state.lastSchedulingResult);
+
+// Composite selector hooks
+export const useAutoSchedule = () => useTodoStore(state => ({
+  loading: state.schedulingLoading,
+  error: state.schedulingError,
+  lastResult: state.lastSchedulingResult,
+  autoSchedule: state.autoScheduleWaitingTodos,
+  clearError: state.clearSchedulingError,
+}));
+
+export const useSchedulingActions = () => useTodoStore(state => ({
+  fetchSchedules: state.fetchSchedules,
+  autoSchedule: state.autoScheduleWaitingTodos,
+  clearError: state.clearSchedulingError,
+}));
