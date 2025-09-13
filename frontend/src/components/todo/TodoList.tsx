@@ -1,13 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Todo, FilterOptions } from '@/types';
+import { Todo, FilterOptions, TodoPriority, TodoStatus } from '@/types';
 import TodoItem from './TodoItem';
 import { ListErrorFallback, InlineErrorDisplay } from '@/components/ui/ErrorDisplay';
+import { SortOption } from './TodoFilter';
 
 interface TodoListProps {
   todos: Todo[];
   filters: FilterOptions;
+  sortOption?: SortOption;
   onTodoClick?: (todo: Todo) => void;
   onDragStart?: (e: React.DragEvent, todo: Todo) => void;
   // 에러 상태 관리
@@ -16,29 +18,39 @@ interface TodoListProps {
   isLoading?: boolean;
 }
 
-export default function TodoList({ todos, filters, onTodoClick, onDragStart, error, onRetry, isLoading }: TodoListProps) {
+export default function TodoList({ 
+  todos, 
+  filters, 
+  sortOption,
+  onTodoClick, 
+  onDragStart, 
+  error, 
+  onRetry, 
+  isLoading 
+}: TodoListProps) {
   // 필터링된 Todo 목록
   const filteredTodos = useMemo(() => {
+    if (!todos || !Array.isArray(todos)) return [];
     return todos.filter(todo => {
       // 카테고리 필터
-      if (filters.categories.length > 0 && !filters.categories.includes(todo.category)) {
+      if (filters.categories?.length > 0 && !filters.categories.includes(todo.category)) {
         return false;
       }
 
       // 우선순위 필터
-      if (filters.priorities.length > 0 && !filters.priorities.includes(todo.priority)) {
+      if (filters.priorities?.length > 0 && !filters.priorities.includes(todo.priority)) {
         return false;
       }
 
       // 상태 필터
-      if (filters.statuses.length > 0 && !filters.statuses.includes(todo.status)) {
+      if (filters.statuses?.length > 0 && !filters.statuses.includes(todo.status)) {
         return false;
       }
 
       // 태그 필터 (하나라도 일치하면 포함)
-      if (filters.tags.length > 0) {
+      if (filters.tags?.length > 0) {
         const hasMatchingTag = filters.tags.some(filterTag =>
-          todo.tags.some(todoTag => 
+          (todo.tags || []).some(todoTag =>
             todoTag.toLowerCase().includes(filterTag.toLowerCase())
           )
         );
@@ -51,34 +63,85 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
     });
   }, [todos, filters]);
 
-  // 우선순위별로 정렬 (URGENT > HIGH > MEDIUM > LOW)
+  // 정렬된 Todo 목록
   const sortedTodos = useMemo(() => {
-    const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-    
-    return [...filteredTodos].sort((a, b) => {
-      // 1차: 우선순위 순서
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-      if (priorityDiff !== 0) return priorityDiff;
-      
-      // 2차: 상태 순서 (진행중 > 예정 > 대기 > 완료 > 놓침 > 취소)
+    if (!sortOption) {
+      // 기본 정렬: 우선순위 > 상태 > 생성일
+      const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
       const statusOrder = {
         IN_PROGRESS: 0,
         SCHEDULED: 1,
         WAITING: 2,
-        COMPLETED: 3,
-        MISSED: 4,
+        MISSED: 3,
+        COMPLETED: 4,
         CANCELLED: 5,
       };
-      const statusDiff = statusOrder[a.status] - statusOrder[b.status];
-      if (statusDiff !== 0) return statusDiff;
       
-      // 3차: 생성일 (최신순)
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }, [filteredTodos]);
+      return [...filteredTodos].sort((a, b) => {
+        // 1차: 우선순위 순서
+        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        
+        // 2차: 상태 순서
+        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+        if (statusDiff !== 0) return statusDiff;
+        
+        // 3차: 생성일 (최신순)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
 
-  // 상태별로 그룹화
+    // 커스텀 정렬
+    return [...filteredTodos].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortOption.field) {
+        case 'priority':
+          const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+          comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+          break;
+        
+        case 'deadline':
+          // 마감일이 없는 경우 처리
+          const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+          const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+          comparison = aDeadline - bDeadline;
+          break;
+        
+        case 'createdAt':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        
+        case 'updatedAt':
+          comparison = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+          break;
+        
+        case 'title':
+          comparison = a.title.localeCompare(b.title, 'ko-KR');
+          break;
+        
+        case 'duration':
+          comparison = a.duration - b.duration;
+          break;
+        
+        default:
+          comparison = 0;
+      }
+
+      // 내림차순인 경우 결과 반전
+      return sortOption.direction === 'desc' ? -comparison : comparison;
+    });
+  }, [filteredTodos, sortOption]);
+
+  // 상태별로 그룹화 (정렬이 우선순위/상태 기반이 아닐 때만 사용)
+  const shouldGroupByStatus = !sortOption || (sortOption.field !== 'priority' && sortOption.field !== 'deadline');
+
   const groupedTodos = useMemo(() => {
+    if (!shouldGroupByStatus) {
+      // 정렬 우선시 - 그룹화 없이 단순 목록
+      return { all: sortedTodos };
+    }
+
     const groups = {
       active: [] as Todo[],
       scheduled: [] as Todo[],
@@ -112,12 +175,18 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
     });
 
     return groups;
-  }, [sortedTodos]);
+  }, [sortedTodos, shouldGroupByStatus]);
 
   const getTodoCount = () => {
-    const activeCount = groupedTodos.active.length + groupedTodos.scheduled.length;
-    const totalCount = sortedTodos.length;
-    return { active: activeCount, total: totalCount };
+    if (!shouldGroupByStatus) {
+      const activeCount = sortedTodos.filter(todo => 
+        ['IN_PROGRESS', 'SCHEDULED', 'WAITING'].includes(todo.status)
+      ).length;
+      return { active: activeCount, total: sortedTodos.length };
+    }
+
+    const activeCount = (groupedTodos.active?.length || 0) + (groupedTodos.scheduled?.length || 0) + (groupedTodos.waiting?.length || 0);
+    return { active: activeCount, total: sortedTodos.length };
   };
 
   const { active: activeCount, total: totalCount } = getTodoCount();
@@ -154,139 +223,81 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
     );
   }
 
+  const renderTodoGroup = (title: string, todos: Todo[], color: string, icon?: string) => {
+    if (todos.length === 0) return null;
+
+    return (
+      <div className="mb-4">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
+          <span className={`w-2 h-2 ${color} rounded-full mr-2 ${title === '놓친 할 일' ? 'animate-pulse' : ''}`}></span>
+          {icon && <span className="mr-1">{icon}</span>}
+          {title} ({todos.length})
+        </h4>
+        <div className="space-y-2">
+          {todos.map(todo => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onTodoClick={onTodoClick}
+              onDragStart={onDragStart}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex-1 overflow-y-auto sidebar-scroll">
-      {/* 헤더 - 할 일 개수 */}
+      {/* 헤더 - 할 일 개수 및 정렬 정보 */}
       <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-2 mb-2">
         <div className="flex items-center justify-between text-xs text-gray-600">
           <span>
             활성 {activeCount}개 · 전체 {totalCount}개
           </span>
-          <span className="text-gray-400">
-            드래그하여 일정에 추가
-          </span>
+          <div className="flex items-center space-x-2">
+            {sortOption && (
+              <span className="text-gray-400">
+                {sortOption.label}
+              </span>
+            )}
+            <span className="text-gray-400">
+              드래그하여 일정에 추가
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Todo 목록 */}
       <div className="px-4 space-y-2">
-        {/* 진행 중인 할 일 */}
-        {groupedTodos.active.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-              진행 중 ({groupedTodos.active.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.active.map(todo => (
+        {shouldGroupByStatus ? (
+          // 상태별 그룹화된 표시
+          <>
+            {renderTodoGroup('진행 중', groupedTodos.active, 'bg-yellow-500', '🔄')}
+            {renderTodoGroup('예정됨', groupedTodos.scheduled, 'bg-blue-500', '📅')}
+            {renderTodoGroup('대기 중', groupedTodos.waiting, 'bg-gray-400', '⏳')}
+            {renderTodoGroup('놓친 할 일', groupedTodos.missed, 'bg-red-500', '❌')}
+            {renderTodoGroup('완료됨', groupedTodos.completed, 'bg-green-500', '✅')}
+            {renderTodoGroup('기타', groupedTodos.other, 'bg-gray-300')}
+          </>
+        ) : (
+          // 정렬 우선시 - 단순 목록
+          <div className="space-y-2">
+            {groupedTodos.all.map((todo, index) => (
+              <div key={todo.id} className="relative">
+                {/* 정렬 순서 표시 (선택사항) */}
+                {sortOption && ['deadline', 'priority'].includes(sortOption.field) && (
+                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 font-mono">
+                    {index + 1}
+                  </div>
+                )}
                 <TodoItem
-                  key={todo.id}
                   todo={todo}
                   onTodoClick={onTodoClick}
                   onDragStart={onDragStart}
                 />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 예정된 할 일 */}
-        {groupedTodos.scheduled.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-              예정됨 ({groupedTodos.scheduled.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.scheduled.map(todo => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onTodoClick={onTodoClick}
-                  onDragStart={onDragStart}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 대기 중인 할 일 */}
-        {groupedTodos.waiting.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
-              대기 중 ({groupedTodos.waiting.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.waiting.map(todo => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onTodoClick={onTodoClick}
-                  onDragStart={onDragStart}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 놓친 할 일 */}
-        {groupedTodos.missed.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
-              놓친 할 일 ({groupedTodos.missed.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.missed.map(todo => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onTodoClick={onTodoClick}
-                  onDragStart={onDragStart}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 완료된 할 일 */}
-        {groupedTodos.completed.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              완료됨 ({groupedTodos.completed.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.completed.map(todo => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onTodoClick={onTodoClick}
-                  onDragStart={onDragStart}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 기타 할 일 */}
-        {groupedTodos.other.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-              <span className="w-2 h-2 bg-gray-300 rounded-full mr-2"></span>
-              기타 ({groupedTodos.other.length})
-            </h4>
-            <div className="space-y-2">
-              {groupedTodos.other.map(todo => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onTodoClick={onTodoClick}
-                  onDragStart={onDragStart}
-                />
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

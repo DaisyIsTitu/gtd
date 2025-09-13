@@ -1,13 +1,16 @@
-import { Todo, TodoSchedule } from '@/types';
-import { 
-  getCategoryColor, 
-  getStatusColor, 
-  getPriorityColor, 
-  formatTime, 
+import React, { useState } from 'react';
+import { Todo, TodoSchedule, TodoStatus } from '@/types';
+import {
+  getCategoryColor,
+  getStatusColor,
+  getPriorityColor,
+  formatTime,
   formatDuration,
   CATEGORY_LABELS,
-  PRIORITY_LABELS 
+  PRIORITY_LABELS
 } from '@/lib/constants';
+import StateButton from '@/components/ui/StateButton';
+import { useTodoState } from '@/hooks/useTodoState';
 
 interface TodoBlockProps {
   schedule: TodoSchedule;
@@ -17,6 +20,9 @@ interface TodoBlockProps {
 }
 
 export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = false }: TodoBlockProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { updateStatus, loading: stateLoading } = useTodoState();
+
   const categoryColors = getCategoryColor(todo.category);
   const statusColors = getStatusColor(todo.status);
   const priorityColors = getPriorityColor(todo.priority);
@@ -77,6 +83,11 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
     onClick?.(schedule);
   };
 
+  const handleStatusChange = async (newStatus: TodoStatus) => {
+    console.log(`상태 변경: ${todo.id} ${todo.status} → ${newStatus}`);
+    await updateStatus(todo.id, newStatus);
+  };
+
   // 인라인 스타일로 동적 색상 적용
   const blockStyle = {
     backgroundColor: statusColors.bg,
@@ -88,9 +99,12 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
   return (
     <div
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`
         ${getBlockStyles()}
         ${getPriorityBorder()}
+        relative
       `}
       style={blockStyle}
       data-todo-id={todo.id}
@@ -113,10 +127,10 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
           {todo.priority === 'HIGH' && (
             <span style={{ color: priorityColors.primary }} className="text-xs">🔥</span>
           )}
-          
+
           {/* 상태 표시 */}
           {todo.status === 'IN_PROGRESS' && (
-            <div 
+            <div
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: statusColors.primary }}
             />
@@ -129,6 +143,20 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
           )}
         </div>
       </div>
+
+      {/* 상태 전환 버튼 (호버 시 표시) */}
+      {isHovered && !isPreviewMode && (
+        <div className="absolute top-1 right-1 z-10">
+          <StateButton
+            currentStatus={todo.status}
+            onStatusChange={handleStatusChange}
+            loading={stateLoading}
+            size="sm"
+            variant="icon"
+          />
+        </div>
+      )}
+
 
       {/* 시간 정보 */}
       <div className="text-xs opacity-75 flex justify-between items-center">

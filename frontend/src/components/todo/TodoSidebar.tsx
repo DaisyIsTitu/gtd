@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TodoList from './TodoList';
-import TodoFilter from './TodoFilter';
+import TodoFilter, { SortOption } from './TodoFilter';
+import SearchBar from './SearchBar';
 import { Todo, FilterOptions } from '@/types';
 import { TodoSidebarSkeleton } from '@/components/ui/TodoSkeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
@@ -18,6 +19,13 @@ interface TodoSidebarProps {
   autoScheduleLoading?: boolean;
 }
 
+const DEFAULT_SORT: SortOption = {
+  value: 'priority-desc',
+  label: '우선순위 ↓',
+  field: 'priority',
+  direction: 'desc'
+};
+
 export default function TodoSidebar({
   todos,
   loading = false,
@@ -28,16 +36,35 @@ export default function TodoSidebar({
   onAutoSchedule,
   autoScheduleLoading = false,
 }: TodoSidebarProps) {
-  // Filter state
+  // Filter, sort, and search state
   const [filters, setFilters] = useState<FilterOptions>({
     categories: [],
     priorities: [],
     statuses: [],
     tags: []
   });
+  const [sortOption, setSortOption] = useState<SortOption>(DEFAULT_SORT);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<Todo[]>(todos);
 
-  // Apply filters to todos
-  const filteredTodos = todos.filter(todo => {
+  // todos가 변경되면 searchResults도 업데이트 (props 변경 시)
+  useEffect(() => {
+    if (!searchTerm) {
+      setSearchResults(todos);
+    }
+  }, [todos, searchTerm]);
+
+  // Handle search changes
+  const handleSearchChange = (term: string, results: Todo[]) => {
+    setSearchTerm(term);
+    setSearchResults(results);
+  };
+
+  // Use search results if searching, otherwise use all todos
+  const todosToFilter = searchTerm ? searchResults : todos;
+
+  // Apply filters to the todos (search results or all todos)
+  const filteredTodos = todosToFilter.filter(todo => {
     if (filters.categories.length > 0 && !filters.categories.includes(todo.category)) {
       return false;
     }
@@ -53,7 +80,7 @@ export default function TodoSidebar({
     return true;
   });
 
-  // Group filtered todos by status
+  // Group filtered todos by status for counts
   const inProgressTodos = filteredTodos.filter(todo => todo.status === 'IN_PROGRESS');
   const scheduledTodos = filteredTodos.filter(todo => todo.status === 'SCHEDULED');
   const waitingTodos = filteredTodos.filter(todo => todo.status === 'WAITING');
@@ -186,17 +213,38 @@ export default function TodoSidebar({
           </div>
         </div>
         
-        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-          <span>활성: {getActiveCount()}</span>
-          <span>전체: {getTotalCount()}</span>
+        <div className="flex items-center justify-between mt-2 text-sm">
+          <div className="flex items-center space-x-3 text-gray-600">
+            <span>활성: {getActiveCount()}</span>
+            <span>전체: {getTotalCount()}</span>
+            {searchTerm && (
+              <span className="text-blue-600 text-xs">
+                "{searchTerm}" 검색 중
+              </span>
+            )}
+          </div>
+          {/* 현재 정렬 표시 */}
+          <div className="text-xs text-gray-500">
+            {sortOption.label}
+          </div>
         </div>
       </div>
 
-      {/* 필터 */}
-      <div className="border-b border-gray-100">
-        <TodoFilter 
+      {/* 검색 바 */}
+      <SearchBar
+        todos={todos}
+        onSearchChange={handleSearchChange}
+        placeholder="제목, 설명, 태그로 검색..."
+        disabled={loading}
+      />
+
+      {/* 필터 & 정렬 */}
+      <div>
+        <TodoFilter
           filters={filters}
           onFiltersChange={setFilters}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
         />
       </div>
 
@@ -204,22 +252,31 @@ export default function TodoSidebar({
       <div className="flex-1 overflow-y-auto sidebar-scroll">
         <TodoList
           todos={filteredTodos}
-          filters={filters}
+          filters={{} as FilterOptions} // 이미 필터링된 todos를 전달하므로 빈 필터
+          sortOption={sortOption}
           onTodoClick={onTodoClick}
           onDragStart={onDragStart}
         />
       </div>
 
       {/* 푸터 */}
-      <div className="border-t border-gray-100 p-3 text-center">
-        <p className="text-xs text-gray-500">
-          마지막 업데이트: {new Date().toLocaleString('ko-KR', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </p>
+      <div className="border-t border-gray-100 p-3">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span>
+            마지막 업데이트: {new Date().toLocaleString('ko-KR', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+          {(filteredTodos.length !== todos.length || searchTerm) && (
+            <span className="text-blue-600">
+              {filteredTodos.length}/{todos.length} 표시
+              {searchTerm && ' (검색됨)'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

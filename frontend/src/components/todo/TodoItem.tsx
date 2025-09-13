@@ -1,6 +1,9 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Todo, TodoCategory, TodoPriority, TodoStatus } from '@/types';
+import StateButton from '@/components/ui/StateButton';
+import { useTodoState } from '@/hooks/useTodoState';
 
 interface TodoItemProps {
   todo: Todo;
@@ -44,6 +47,9 @@ const formatDuration = (minutes: number): string => {
 };
 
 export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { updateStatus, loading: stateLoading } = useTodoState();
+
   const categoryStyle = CATEGORY_STYLES[todo.category];
   const priorityStyle = PRIORITY_STYLES[todo.priority];
   const statusStyle = STATUS_STYLES[todo.status];
@@ -56,6 +62,11 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
     onDragStart?.(e, todo);
   };
 
+  const handleStatusChange = async (newStatus: TodoStatus) => {
+    console.log(`TodoItem 상태 변경: ${todo.id} ${todo.status} → ${newStatus}`);
+    await updateStatus(todo.id, newStatus);
+  };
+
   const isInteractive = todo.status === 'WAITING' || todo.status === 'SCHEDULED';
 
   return (
@@ -64,6 +75,8 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
         isInteractive ? 'cursor-pointer hover:border-gray-300' : 'opacity-75'
       } ${priorityStyle.border} border-l-4`}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       draggable={isInteractive}
       onDragStart={handleDragStart}
       data-todo-id={todo.id}
@@ -79,12 +92,26 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
           <h3 className="text-sm font-medium text-gray-900 truncate">{todo.title}</h3>
         </div>
         <div className="flex items-center space-x-1 ml-2">
-          {/* 상태 아이콘 */}
-          <span className="text-sm" title={todo.status}>
-            {statusStyle.icon}
-          </span>
+          {/* 상태 전환 버튼 (호버 시 표시) */}
+          {isHovered && (
+            <StateButton
+              currentStatus={todo.status}
+              onStatusChange={handleStatusChange}
+              loading={stateLoading}
+              size="sm"
+              variant="icon"
+            />
+          )}
+
+          {/* 상태 아이콘 (호버 시 숨김) */}
+          {!isHovered && (
+            <span className="text-sm" title={todo.status}>
+              {statusStyle.icon}
+            </span>
+          )}
+
           {/* 드래그 핸들 */}
-          {isInteractive && (
+          {isInteractive && !isHovered && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
               <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm4-16h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
