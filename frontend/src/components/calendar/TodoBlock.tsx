@@ -17,9 +17,18 @@ interface TodoBlockProps {
   todo: Todo;
   onClick?: (schedule: TodoSchedule) => void;
   isPreviewMode?: boolean;
+  isPreviewNew?: boolean;
+  isPreviewExisting?: boolean;
 }
 
-export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = false }: TodoBlockProps) {
+export default function TodoBlock({
+  schedule,
+  todo,
+  onClick,
+  isPreviewMode = false,
+  isPreviewNew = false,
+  isPreviewExisting = false
+}: TodoBlockProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { updateStatus, loading: stateLoading } = useTodoState();
 
@@ -29,11 +38,18 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
 
   // 상태에 따른 스타일 적용
   const getBlockStyles = () => {
-    let baseStyles = 'p-2 rounded-md border cursor-pointer transition-all duration-200 hover:shadow-md';
+    let baseStyles = 'p-2 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] backdrop-blur-sm overflow-hidden relative group';
 
-    // Preview mode 스타일
+    // Preview mode 스타일 - 상황에 맞는 CSS 클래스 적용
     if (isPreviewMode) {
-      baseStyles += ' ring-2 ring-green-400 ring-offset-1 shadow-lg animate-pulse border-green-300';
+      if (isPreviewNew) {
+        baseStyles += ' preview-new';
+      } else if (isPreviewExisting) {
+        baseStyles += ' preview-existing';
+      } else {
+        // 기본적으로 새로운 todo로 처리
+        baseStyles += ' preview-new';
+      }
       return baseStyles;
     }
 
@@ -96,6 +112,18 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
     borderLeftColor: priorityColors.primary,
   };
 
+  // 진행도 계산 (상태 기반)
+  const getProgressPercentage = () => {
+    switch (todo.status) {
+      case 'COMPLETED': return 100;
+      case 'IN_PROGRESS': return 60;
+      case 'SCHEDULED': return 30;
+      case 'WAITING': return 0;
+      case 'MISSED': return 20;
+      default: return 0;
+    }
+  };
+
   return (
     <div
       onClick={handleClick}
@@ -111,35 +139,65 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
       data-schedule-id={schedule.id}
       title={`${todo.title} - ${CATEGORY_LABELS[todo.category]} (${PRIORITY_LABELS[todo.priority]})`}
     >
+      {/* 진행도 표시바 (상단) */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-black bg-opacity-10 overflow-hidden">
+        <div
+          className="h-full transition-all duration-500 ease-out"
+          style={{
+            width: `${getProgressPercentage()}%`,
+            backgroundColor: statusColors.primary || categoryColors.primary
+          }}
+        />
+      </div>
       {/* 상단: 제목과 상태 표시 */}
-      <div className="flex justify-between items-start mb-1">
-        <h3 className={`font-medium text-sm leading-tight flex-1 mr-1 ${
-          todo.status === 'COMPLETED' ? 'line-through opacity-60' : ''
-        }`}>
-          {isPreviewMode && <span className="mr-1">✨</span>}
-          {todo.title}
-        </h3>
-        <div className="flex items-center space-x-1">
-          {/* 우선순위 표시 */}
-          {todo.priority === 'URGENT' && (
-            <span style={{ color: priorityColors.primary }} className="text-xs">⚡</span>
-          )}
-          {todo.priority === 'HIGH' && (
-            <span style={{ color: priorityColors.primary }} className="text-xs">🔥</span>
-          )}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1 mr-2">
+          <h3 className={`font-semibold text-sm leading-tight truncate ${
+            todo.status === 'COMPLETED' ? 'line-through opacity-60' : ''
+          }`}>
+            {todo.title}
+          </h3>
+          {/* 부제목으로 카테고리와 우선순위를 간단히 표시 */}
+          <div className="flex items-center space-x-2 mt-0.5">
+            <span className="text-xs font-medium opacity-70">
+              {CATEGORY_LABELS[todo.category]}
+            </span>
+            {(todo.priority === 'URGENT' || todo.priority === 'HIGH') && (
+              <span className="text-xs font-medium opacity-80">
+                {todo.priority === 'URGENT' ? '⚡ 긴급' : '🔥 높음'}
+              </span>
+            )}
+          </div>
+        </div>
 
+        <div className="flex flex-col items-end space-y-1">
           {/* 상태 표시 */}
           {todo.status === 'IN_PROGRESS' && (
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: statusColors.primary }}
-            />
+            <div className="flex items-center space-x-1">
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ backgroundColor: statusColors.primary }}
+              />
+              <span className="text-xs font-medium">진행중</span>
+            </div>
           )}
           {todo.status === 'COMPLETED' && (
-            <span style={{ color: statusColors.primary }} className="text-xs">✅</span>
+            <div className="flex items-center space-x-1">
+              <span style={{ color: statusColors.primary }} className="text-sm">✅</span>
+              <span className="text-xs font-medium opacity-70">완료</span>
+            </div>
           )}
           {todo.status === 'MISSED' && (
-            <span style={{ color: statusColors.primary }} className="text-xs">⚠️</span>
+            <div className="flex items-center space-x-1">
+              <span style={{ color: statusColors.primary }} className="text-sm">⚠️</span>
+              <span className="text-xs font-medium text-red-600">놓침</span>
+            </div>
+          )}
+          {todo.status === 'SCHEDULED' && (
+            <span className="text-xs font-medium opacity-60">예정</span>
+          )}
+          {todo.status === 'WAITING' && (
+            <span className="text-xs font-medium opacity-60">대기중</span>
           )}
         </div>
       </div>
@@ -159,56 +217,48 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
 
 
       {/* 시간 정보 */}
-      <div className="text-xs opacity-75 flex justify-between items-center">
-        <span>
-          {formatTime(new Date(schedule.startTime))} - {formatTime(new Date(schedule.endTime))}
-        </span>
-        <span className="font-medium">
-          {formatDuration(todo.duration)}
-        </span>
-      </div>
-
-      {/* 카테고리 라벨 */}
-      <div className="mt-1 flex items-center justify-between">
-        <span 
-          className="inline-block px-1.5 py-0.5 text-xs rounded-full font-medium"
-          style={{ 
-            backgroundColor: categoryColors.bg,
-            color: categoryColors.text 
-          }}
-        >
-          {CATEGORY_LABELS[todo.category]}
-        </span>
-        
-        {/* 우선순위 라벨 (URGENT, HIGH만 표시) */}
-        {(todo.priority === 'URGENT' || todo.priority === 'HIGH') && (
-          <span 
-            className="inline-block px-1.5 py-0.5 text-xs rounded-full font-medium"
-            style={{ 
-              backgroundColor: priorityColors.indicator,
-              color: priorityColors.text 
-            }}
-          >
-            {PRIORITY_LABELS[todo.priority]}
-          </span>
-        )}
+      <div className="bg-black bg-opacity-5 rounded-md px-2 py-1 mb-2">
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex items-center space-x-1">
+            <span className="font-mono font-medium">
+              {formatTime(new Date(schedule.startTime))}
+            </span>
+            <span className="opacity-60">-</span>
+            <span className="font-mono font-medium">
+              {formatTime(new Date(schedule.endTime))}
+            </span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-xs opacity-60">⏱</span>
+            <span className="font-medium">
+              {formatDuration(todo.duration)}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 태그들 (있는 경우) */}
       {todo.tags && todo.tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1">
-          {todo.tags.slice(0, 2).map((tag, index) => (
+        <div className="flex flex-wrap gap-1 mb-1">
+          {todo.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="inline-block px-1 py-0.5 text-xs rounded-md opacity-60"
-              style={{ backgroundColor: categoryColors.primary + '20' }}
+              className="inline-block px-1.5 py-0.5 text-xs rounded-md font-medium border"
+              style={{
+                backgroundColor: categoryColors.primary + '15',
+                borderColor: categoryColors.primary + '30',
+                color: categoryColors.primary
+              }}
             >
               #{tag}
             </span>
           ))}
-          {todo.tags.length > 2 && (
-            <span className="text-xs opacity-50">
-              +{todo.tags.length - 2}
+          {todo.tags.length > 3 && (
+            <span
+              className="inline-block px-1.5 py-0.5 text-xs rounded-md font-medium opacity-60"
+              style={{ backgroundColor: categoryColors.primary + '10' }}
+            >
+              +{todo.tags.length - 3}
             </span>
           )}
         </div>
@@ -216,14 +266,24 @@ export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = fal
 
       {/* 분할된 작업인 경우 */}
       {schedule.splitInfo && (
-        <div className="mt-1 text-xs opacity-60 flex items-center">
-          <span 
-            className="inline-block w-2 h-2 rounded-full mr-1"
-            style={{ backgroundColor: categoryColors.primary }}
-          />
-          {schedule.splitInfo.partNumber}/{schedule.splitInfo.totalParts} 분할
+        <div className="flex items-center justify-between mt-1 p-1 rounded-md bg-white bg-opacity-30">
+          <div className="flex items-center space-x-1">
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: categoryColors.primary }}
+            />
+            <span className="text-xs font-medium">
+              파트 {schedule.splitInfo.partNumber}/{schedule.splitInfo.totalParts}
+            </span>
+          </div>
+          <span className="text-xs opacity-60">
+            🧩 분할 작업
+          </span>
         </div>
       )}
+
+      {/* 호버 그라데이션 효과 */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-br from-white to-transparent transition-opacity duration-200 pointer-events-none rounded-lg" />
     </div>
   );
 }

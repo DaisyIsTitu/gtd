@@ -85,11 +85,34 @@ export default function HomePage() {
     if (autoSchedule.lastResult?.success) {
       const result = autoSchedule.lastResult;
       toast.success(
-        '자동 배치 완료', 
+        '자동 배치 완료',
         `${result.scheduledTodos?.length || 0}개의 할 일이 배치되었습니다.`
       );
     }
   }, [autoSchedule.lastResult, toast]);
+
+  // Create merged schedules for preview mode
+  const getMergedSchedules = () => {
+    if (!previewMode.isPreviewMode) {
+      return schedules;
+    }
+
+    // Mark existing schedules as preview-existing
+    const existingSchedules = schedules.map(schedule => ({
+      ...schedule,
+      isPreviewExisting: true,
+      isPreviewNew: false
+    }));
+
+    // Mark preview schedules as preview-new
+    const newSchedules = previewMode.previewSchedules.map(schedule => ({
+      ...schedule,
+      isPreviewNew: true,
+      isPreviewExisting: false
+    }));
+
+    return [...existingSchedules, ...newSchedules];
+  };
 
   // Event handlers
   const handleScheduleClick = (schedule: TodoSchedule) => {
@@ -148,13 +171,22 @@ export default function HomePage() {
   };
 
   const handleAutoSchedule = async () => {
+    // 이미 로딩 중이거나 미리보기 모드인 경우 중복 실행 방지
+    if (autoSchedule.loading || previewMode.isPreviewMode) {
+      console.log('🚨 자동 배치 중복 실행 방지 - 로딩:', autoSchedule.loading, '미리보기:', previewMode.isPreviewMode);
+      return;
+    }
+
     if (!waitingTodos || waitingTodos.length === 0) {
       toast.warning('자동 배치', '배치할 대기중인 할 일이 없습니다.');
       return;
     }
 
+    console.log('🚀 자동 배치 시작 - waitingTodos:', waitingTodos.length);
+
     try {
       const result = await autoSchedule.autoSchedule();
+      console.log('🚀 자동 배치 결과:', result);
 
       // Enter preview mode with the scheduling result
       if (result && result.success) {
@@ -162,7 +194,8 @@ export default function HomePage() {
         toast.info('미리보기 모드', '배치 결과를 확인하고 적용 또는 취소를 선택하세요.');
       }
     } catch (error) {
-      console.error('Auto-scheduling failed:', error);
+      console.error('🚨 Auto-scheduling failed:', error);
+      toast.error('자동 배치 실패', error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
     }
   };
 
@@ -175,6 +208,7 @@ export default function HomePage() {
   };
 
   const handlePreviewRetry = async () => {
+    console.log('🔄 미리보기 재시도');
     previewMode.exitPreviewMode();
     // Retry auto-scheduling
     setTimeout(() => {
@@ -183,6 +217,7 @@ export default function HomePage() {
   };
 
   const handlePreviewCancel = () => {
+    console.log('❌ 미리보기 취소');
     previewMode.exitPreviewMode();
     toast.info('배치 취소', '자동 배치가 취소되었습니다.');
   };
@@ -255,29 +290,58 @@ export default function HomePage() {
               🧪 테스트
             </button>
 
-            {/* Auto Schedule Button */}
-            <button
-              onClick={handleAutoSchedule}
-              disabled={autoSchedule.loading || (!waitingTodos || waitingTodos.length === 0)}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {autoSchedule.loading ? (
-                <>
-                  <svg className="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  배치 중...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  자동 배치
-                </>
+            {/* Auto Schedule Button with Enhanced Progress */}
+            <div className="relative">
+              <button
+                onClick={handleAutoSchedule}
+                disabled={autoSchedule.loading || previewMode.isPreviewMode || (!waitingTodos || waitingTodos.length === 0)}
+                className={`auto-schedule-button inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${
+                  autoSchedule.loading
+                    ? 'loading bg-green-500 text-white cursor-not-allowed'
+                    : (previewMode.isPreviewMode)
+                    ? 'bg-orange-400 text-white cursor-not-allowed'
+                    : (!waitingTodos || waitingTodos.length === 0)
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md focus:ring-green-500'
+                }`}
+              >
+                {autoSchedule.loading ? (
+                  <>
+                    <div className="relative w-4 h-4 mr-2">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </div>
+                    <span className="animate-pulse">
+                      {waitingTodos ? `${waitingTodos.length}개 배치 중...` : '배치 중...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>
+                      {previewMode.isPreviewMode
+                        ? '미리보기 모드'
+                        : (!waitingTodos || waitingTodos.length === 0)
+                        ? '배치할 할 일 없음'
+                        : `자동 배치 (${waitingTodos.length}개)`
+                      }
+                    </span>
+                  </>
+                )}
+              </button>
+
+              {/* Enhanced Progress Bar - 로딩 중일 때만 표시 */}
+              {autoSchedule.loading && (
+                <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-green-100 rounded-full overflow-hidden">
+                  <div className="h-full progress-bar-enhanced rounded-full">
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             <button
               onClick={addModal.open}
@@ -322,7 +386,7 @@ export default function HomePage() {
             <CalendarLoadingIndicator />
           ) : (
             <WeeklyCalendar
-              schedules={previewMode.isPreviewMode ? previewMode.previewSchedules : schedules}
+              schedules={getMergedSchedules()}
               todos={todos || []}
               onScheduleClick={handleScheduleClick}
               onTimeSlotClick={handleTimeSlotClick}

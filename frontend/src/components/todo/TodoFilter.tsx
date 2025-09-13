@@ -53,52 +53,6 @@ const SORT_OPTIONS: SortOption[] = [
   { value: 'updated-desc', label: '수정일 ↓', field: 'updatedAt', direction: 'desc' },
 ];
 
-// 필터 프리셋 정의
-const FILTER_PRESETS = [
-  {
-    name: 'active',
-    label: '활성 할 일',
-    icon: '🎯',
-    filters: {
-      statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'] as TodoStatus[],
-    }
-  },
-  {
-    name: 'today',
-    label: '오늘 할 일',
-    icon: '📅',
-    filters: {
-      statuses: ['SCHEDULED', 'IN_PROGRESS'] as TodoStatus[],
-    }
-  },
-  {
-    name: 'urgent',
-    label: '긴급한 일',
-    icon: '🚨',
-    filters: {
-      priorities: ['URGENT', 'HIGH'] as TodoPriority[],
-      statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'] as TodoStatus[],
-    }
-  },
-  {
-    name: 'work',
-    label: '업무',
-    icon: '💼',
-    filters: {
-      categories: ['WORK'] as TodoCategory[],
-      statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'] as TodoStatus[],
-    }
-  },
-  {
-    name: 'personal',
-    label: '개인',
-    icon: '👤',
-    filters: {
-      categories: ['PERSONAL'] as TodoCategory[],
-      statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'] as TodoStatus[],
-    }
-  },
-];
 
 export default function TodoFilter({ 
   filters, 
@@ -151,14 +105,6 @@ export default function TodoFilter({
     });
   };
 
-  const handlePresetClick = (preset: typeof FILTER_PRESETS[0]) => {
-    onFiltersChange({
-      categories: preset.filters.categories || [],
-      priorities: preset.filters.priorities || [],
-      statuses: preset.filters.statuses || [],
-      tags: [],
-    });
-  };
 
   const hasActiveFilters = 
     filters.categories.length > 0 ||
@@ -213,19 +159,6 @@ export default function TodoFilter({
           </div>
         </div>
 
-        {/* 빠른 필터 프리셋 (항상 표시) */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {FILTER_PRESETS.slice(0, 3).map((preset) => (
-            <button
-              key={preset.name}
-              onClick={() => handlePresetClick(preset)}
-              className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <span className="mr-1.5">{preset.icon}</span>
-              {preset.label}
-            </button>
-          ))}
-        </div>
 
         {/* 확장된 옵션 */}
         {isExpanded && (
@@ -257,22 +190,6 @@ export default function TodoFilter({
             {/* 필터 탭 */}
             {activeTab === 'filters' && (
               <div className="space-y-4">
-                {/* 필터 프리셋 전체 */}
-                <div>
-                  <h4 className="text-xs font-medium text-gray-600 mb-2">빠른 필터</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {FILTER_PRESETS.map((preset) => (
-                      <button
-                        key={preset.name}
-                        onClick={() => handlePresetClick(preset)}
-                        className="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <span className="mr-1.5">{preset.icon}</span>
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* 상태 필터 */}
                 <div>

@@ -90,7 +90,7 @@ export const TODO_STATUSES = {
     icon: '⏳',
   },
   SCHEDULED: {
-    label: '예정됨',
+    label: '예정',
     color: '#3b82f6',
     icon: '📅',
   },

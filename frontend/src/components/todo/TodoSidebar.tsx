@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TodoList from './TodoList';
 import TodoFilter, { SortOption } from './TodoFilter';
 import SearchBar from './SearchBar';
@@ -54,11 +54,11 @@ export default function TodoSidebar({
     }
   }, [todos, searchTerm]);
 
-  // Handle search changes
-  const handleSearchChange = (term: string, results: Todo[]) => {
+  // Handle search changes (useCallback으로 최적화하여 재렌더링 방지)
+  const handleSearchChange = useCallback((term: string, results: Todo[]) => {
     setSearchTerm(term);
     setSearchResults(results);
-  };
+  }, []);
 
   // Use search results if searching, otherwise use all todos
   const todosToFilter = searchTerm ? searchResults : todos;

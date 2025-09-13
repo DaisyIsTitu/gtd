@@ -112,14 +112,14 @@ export type TodoPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 export type TodoStatus = 
   | 'WAITING'      // 대기중
-  | 'SCHEDULED'    // 스케줄됨
+  | 'SCHEDULED'    // 예정
   | 'IN_PROGRESS'  // 진행중
   | 'COMPLETED'    // 완료
   | 'MISSED'       // 놓침
   | 'CANCELLED';   // 취소
 
 export type ScheduleStatus = 
-  | 'SCHEDULED'    // 예정됨
+  | 'SCHEDULED'    // 예정
   | 'ACTIVE'       // 진행중
   | 'COMPLETED'    // 완료
   | 'MISSED'       // 놓침

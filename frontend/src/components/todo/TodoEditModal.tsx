@@ -30,7 +30,7 @@ const PRIORITY_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: 'WAITING' as TodoStatus, label: '대기중', icon: '⏳', color: 'text-gray-600' },
-  { value: 'SCHEDULED' as TodoStatus, label: '예정됨', icon: '📅', color: 'text-blue-600' },
+  { value: 'SCHEDULED' as TodoStatus, label: '예정', icon: '📅', color: 'text-blue-600' },
   { value: 'IN_PROGRESS' as TodoStatus, label: '진행중', icon: '🔄', color: 'text-yellow-600' },
   { value: 'COMPLETED' as TodoStatus, label: '완료', icon: '✅', color: 'text-green-600' },
   { value: 'MISSED' as TodoStatus, label: '놓침', icon: '❌', color: 'text-red-600' },

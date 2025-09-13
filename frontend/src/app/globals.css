@@ -304,14 +304,253 @@ a {
   .todo-item:hover {
     transform: none;
   }
-  
+
   .filter-button:hover {
     transform: none;
   }
-  
+
   /* 터치 디바이스에서 더 큰 터치 영역 */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
+}
+
+/* S3.F.1 - 자동 배치 버튼 프로그레스 애니메이션 */
+@keyframes progress-bar {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+}
+
+@keyframes progress-shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* 자동 배치 버튼 강화된 프로그레스 스타일 */
+.auto-schedule-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.auto-schedule-button.loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: progress-shine 1.5s infinite;
+}
+
+.progress-bar-enhanced {
+  background: linear-gradient(
+    90deg,
+    #10b981 0%,
+    #34d399 25%,
+    #6ee7b7 50%,
+    #34d399 75%,
+    #10b981 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shine 2s infinite;
+}
+
+/* 상태별 프로그레스 바 색상 */
+.progress-analyzing {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+  background-size: 200% 100%;
+}
+
+.progress-scheduling {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+  background-size: 200% 100%;
+}
+
+.progress-completing {
+  background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+  background-size: 200% 100%;
+}
+
+/* S3.F.2 - 미리보기 모드 시각적 효과 */
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes preview-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+  }
+}
+
+@keyframes preview-pulse {
+  0%, 100% {
+    background-color: rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    background-color: rgba(16, 185, 129, 0.2);
+  }
+}
+
+/* 미리보기 모드 기본 스타일 */
+.preview-mode {
+  position: relative;
+}
+
+/* 기존 배치된 Todo (흐리게) */
+.preview-existing {
+  opacity: 0.4 !important;
+  border: 1px dashed #9CA3AF !important;
+  background-color: rgba(156, 163, 175, 0.1) !important;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 새로 배치될 Todo (강조) */
+.preview-new {
+  border: 2px solid #10b981 !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%) !important;
+  animation: preview-glow 2s infinite;
+  position: relative;
+  overflow: visible;
+}
+
+.preview-new::before {
+  content: '✨';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  animation: sparkle 1.5s infinite;
+  z-index: 10;
+}
+
+/* 이동될 Todo (화살표 표시) */
+.preview-moved {
+  position: relative;
+  border: 2px solid #f59e0b !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%) !important;
+  animation: preview-pulse 2s infinite;
+}
+
+.preview-moved::after {
+  content: '→';
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #f59e0b;
+  font-size: 18px;
+  font-weight: bold;
+  animation: slide 1s infinite;
+  z-index: 10;
+}
+
+@keyframes slide {
+  0%, 100% {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50%) translateX(5px);
+    opacity: 0.7;
+  }
+}
+
+/* 미리보기 모드 액션 바 */
+.preview-action-bar {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-bottom: 3px solid #047857;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+/* 미리보기 모드 배치 결과 카드 */
+.preview-result-card {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.preview-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* 미리보기 모드 통계 */
+.preview-stats {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(16, 185, 129, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.preview-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.preview-stat-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.preview-stat-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* 성공/실패 상태 표시 */
+.preview-success {
+  color: #059669;
+}
+
+.preview-failed {
+  color: #dc2626;
+}
+
+.preview-partial {
+  color: #d97706;
 }

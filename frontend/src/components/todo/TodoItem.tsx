@@ -27,13 +27,49 @@ const PRIORITY_STYLES: Record<TodoPriority, { border: string; dot: string }> = {
   LOW: { border: 'border-l-gray-400', dot: 'bg-gray-400' },
 };
 
-const STATUS_STYLES: Record<TodoStatus, { bg: string; text: string; icon: string }> = {
-  WAITING: { bg: 'bg-gray-100', text: 'text-gray-600', icon: '⏳' },
-  SCHEDULED: { bg: 'bg-blue-100', text: 'text-blue-600', icon: '📅' },
-  IN_PROGRESS: { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: '🔄' },
-  COMPLETED: { bg: 'bg-green-100', text: 'text-green-600', icon: '✅' },
-  MISSED: { bg: 'bg-red-100', text: 'text-red-600', icon: '❌' },
-  CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-500', icon: '🚫' },
+const STATUS_STYLES: Record<TodoStatus, { bg: string; text: string; icon: string; border: string; glow: string }> = {
+  WAITING: {
+    bg: 'bg-gray-50',
+    text: 'text-gray-700',
+    icon: '⏳',
+    border: 'border-gray-200',
+    glow: 'shadow-sm'
+  },
+  SCHEDULED: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    icon: '📅',
+    border: 'border-blue-200',
+    glow: 'shadow-blue-100 shadow-md'
+  },
+  IN_PROGRESS: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    icon: '🔄',
+    border: 'border-amber-300 animate-pulse',
+    glow: 'shadow-amber-200 shadow-lg animate-pulse'
+  },
+  COMPLETED: {
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
+    icon: '✅',
+    border: 'border-emerald-200',
+    glow: 'shadow-emerald-100 shadow-md'
+  },
+  MISSED: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    icon: '❌',
+    border: 'border-red-300 animate-pulse',
+    glow: 'shadow-red-200 shadow-lg animate-pulse'
+  },
+  CANCELLED: {
+    bg: 'bg-slate-50',
+    text: 'text-slate-600',
+    icon: '🚫',
+    border: 'border-slate-200',
+    glow: 'shadow-sm opacity-75'
+  },
 };
 
 const formatDuration = (minutes: number): string => {
@@ -71,8 +107,10 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
 
   return (
     <div
-      className={`group relative bg-white rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:shadow-md ${
-        isInteractive ? 'cursor-pointer hover:border-gray-300' : 'opacity-75'
+      className={`group relative rounded-lg border p-3 transition-all duration-300 hover:scale-[1.02] ${
+        statusStyle.bg
+      } ${statusStyle.border} ${statusStyle.glow} ${
+        isInteractive ? 'cursor-pointer hover:shadow-lg' : 'opacity-75'
       } ${priorityStyle.border} border-l-4`}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -85,6 +123,28 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
       data-todo-priority={todo.priority}
       data-todo-duration={todo.duration}
     >
+      {/* 상태 진행도 표시 바 (상단) */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-black bg-opacity-5 rounded-t-lg overflow-hidden">
+        <div
+          className={`h-full transition-all duration-1000 ease-out ${
+            todo.status === 'COMPLETED' ? 'bg-emerald-400' :
+            todo.status === 'IN_PROGRESS' ? 'bg-amber-400 animate-pulse' :
+            todo.status === 'SCHEDULED' ? 'bg-blue-400' :
+            todo.status === 'MISSED' ? 'bg-red-400 animate-pulse' :
+            'bg-gray-300'
+          }`}
+          style={{
+            width: `${
+              todo.status === 'COMPLETED' ? 100 :
+              todo.status === 'IN_PROGRESS' ? 60 :
+              todo.status === 'SCHEDULED' ? 30 :
+              todo.status === 'MISSED' ? 15 :
+              todo.status === 'WAITING' ? 5 : 0
+            }%`
+          }}
+        />
+      </div>
+
       {/* 우선순위 표시 */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
@@ -105,9 +165,21 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
 
           {/* 상태 아이콘 (호버 시 숨김) */}
           {!isHovered && (
-            <span className="text-sm" title={todo.status}>
-              {statusStyle.icon}
-            </span>
+            <div className={`flex items-center space-x-1 px-2 py-1 rounded-full ${statusStyle.bg} ${statusStyle.border} border`}>
+              <span className={`text-sm ${
+                todo.status === 'IN_PROGRESS' || todo.status === 'MISSED' ? 'animate-pulse' : ''
+              }`} title={todo.status}>
+                {statusStyle.icon}
+              </span>
+              <span className={`text-xs font-medium ${statusStyle.text}`}>
+                {todo.status === 'WAITING' && '대기'}
+                {todo.status === 'SCHEDULED' && '예정'}
+                {todo.status === 'IN_PROGRESS' && '진행'}
+                {todo.status === 'COMPLETED' && '완료'}
+                {todo.status === 'MISSED' && '놓침'}
+                {todo.status === 'CANCELLED' && '취소'}
+              </span>
+            </div>
           )}
 
           {/* 드래그 핸들 */}
@@ -131,12 +203,16 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
       {/* 카테고리, 기간, 태그 */}
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center space-x-2">
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${categoryStyle.bg} ${categoryStyle.text}`}>
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-medium border transition-all duration-200 ${categoryStyle.bg} ${categoryStyle.text} hover:scale-105`}>
             <span className="mr-1">{categoryStyle.icon}</span>
             {CATEGORY_OPTIONS.find(c => c.value === todo.category)?.label}
           </span>
-          <span className="text-gray-500 font-medium">
-            {formatDuration(todo.duration)}
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
+            todo.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
+            todo.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-700' :
+            'bg-gray-50 text-gray-600'
+          }`}>
+            ⏱ {formatDuration(todo.duration)}
           </span>
         </div>
       </div>

@@ -20,8 +20,8 @@ export default function DayColumn({
   isToday = false,
   isPreviewMode = false
 }: DayColumnProps) {
-  // 6:00 AM ~ 11:00 PM (23:00) - 18시간
-  const hours = Array.from({ length: 18 }, (_, i) => i + 6);
+  // 10:00 AM ~ 8:00 PM (20:00) - 11시간
+  const hours = Array.from({ length: 11 }, (_, i) => i + 10);
 
   // Todo 찾기 함수
   const getTodoForSchedule = (schedule: TodoSchedule): Todo | undefined => {
@@ -119,6 +119,8 @@ export default function DayColumn({
                 todo={todo}
                 onClick={onScheduleClick}
                 isPreviewMode={isPreviewMode}
+                isPreviewNew={isPreviewMode && schedule.isPreviewNew}
+                isPreviewExisting={isPreviewMode && schedule.isPreviewExisting}
               />
             </div>
           );

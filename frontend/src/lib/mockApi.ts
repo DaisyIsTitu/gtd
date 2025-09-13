@@ -583,14 +583,32 @@ export const schedulingApi = {
       const todos = storageUtils.getItem<Todo[]>(STORAGE_KEYS.TODOS, []);
       const schedules = storageUtils.getItem<TodoSchedule[]>(STORAGE_KEYS.SCHEDULES, []);
       
-      // 요청된 Todo들 찾기
-      const targetTodos = todos.filter(todo => request.todoIds.includes(todo.id));
+      // 요청된 Todo들 중 WAITING 상태인 것만 찾기
+      const targetTodos = todos.filter(todo =>
+        request.todoIds.includes(todo.id) && todo.status === 'WAITING'
+      );
       const newSchedules: TodoSchedule[] = [];
       const conflicts: any[] = [];
       
       // 간단한 스케줄링 로직 (실제로는 더 복잡할 것)
       let currentTime = new Date();
-      currentTime.setHours(9, 0, 0, 0); // 오전 9시부터 시작
+      
+      // 현재 시간이 업무시간(9시-18시) 내라면 현재 시간부터, 아니라면 다음 업무일 9시부터
+      const now = new Date();
+      if (now.getHours() >= 9 && now.getHours() < 18) {
+        // 현재 시간에서 다음 30분 단위로 반올림
+        const minutes = Math.ceil(now.getMinutes() / 30) * 30;
+        currentTime.setHours(now.getHours(), minutes, 0, 0);
+        if (minutes >= 60) {
+          currentTime.setHours(currentTime.getHours() + 1, 0, 0, 0);
+        }
+      } else {
+        // 업무시간 외라면 다음 업무일 오전 9시
+        if (now.getHours() >= 18) {
+          currentTime.setDate(currentTime.getDate() + 1);
+        }
+        currentTime.setHours(9, 0, 0, 0);
+      }
       
       for (const todo of targetTodos) {
         const duration = todo.duration;
@@ -617,6 +635,12 @@ export const schedulingApi = {
         
         // 다음 할 일을 위해 30분 간격 추가
         currentTime = new Date(endTime.getTime() + 30 * 60000);
+        
+        // 업무시간(18시) 초과 시 다음날 9시로 이동
+        if (currentTime.getHours() >= 18) {
+          currentTime.setDate(currentTime.getDate() + 1);
+          currentTime.setHours(9, 0, 0, 0);
+        }
       }
       
       // 저장
@@ -627,16 +651,23 @@ export const schedulingApi = {
         success: true,
         scheduledTodos: newSchedules,
         conflicts,
-        suggestions: [
+        suggestions: targetTodos.length > 0 ? [
           '모든 할 일이 성공적으로 스케줄링되었습니다.',
           '각 할 일 사이에 30분 휴식 시간이 자동으로 배정되었습니다.'
+        ] : [
+          '스케줄링할 대기중인 할 일이 없습니다.',
+          '새로운 할 일을 추가하거나 기존 할 일의 상태를 확인하세요.'
         ],
-        message: `${targetTodos.length}개의 할 일이 자동으로 스케줄링되었습니다.`
+        message: targetTodos.length > 0
+          ? `${targetTodos.length}개의 할 일이 자동으로 스케줄링되었습니다.`
+          : '스케줄링할 대기중인 할 일이 없습니다.'
       };
       
       return createApiResponse(result, true, '자동 스케줄링이 완료되었습니다.');
     } catch (error) {
-      return createApiResponse<any>(null, false, '자동 스케줄링 중 오류가 발생했습니다.');
+      console.error('🚨 자동 스케줄링 오류:', error);
+      const errorMessage = error instanceof Error ? error.message : '자동 스케줄링 중 오류가 발생했습니다.';
+      return createApiResponse<any>(null, false, errorMessage);
     }
   }
 };

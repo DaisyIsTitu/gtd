@@ -274,7 +274,7 @@ export default function TodoList({
           // 상태별 그룹화된 표시
           <>
             {renderTodoGroup('진행 중', groupedTodos.active, 'bg-yellow-500', '🔄')}
-            {renderTodoGroup('예정됨', groupedTodos.scheduled, 'bg-blue-500', '📅')}
+            {renderTodoGroup('예정', groupedTodos.scheduled, 'bg-blue-500', '📅')}
             {renderTodoGroup('대기 중', groupedTodos.waiting, 'bg-gray-400', '⏳')}
             {renderTodoGroup('놓친 할 일', groupedTodos.missed, 'bg-red-500', '❌')}
             {renderTodoGroup('완료됨', groupedTodos.completed, 'bg-green-500', '✅')}

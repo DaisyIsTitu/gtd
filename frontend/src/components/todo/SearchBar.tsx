@@ -92,7 +92,7 @@ export default function SearchBar({
     setSearchTerm(value);
   }, []);
 
-  // 검색 결과가 변경될 때마다 부모 컴포넌트에 알림
+  // 검색어나 결과가 변경될 때 부모 컴포넌트에 알림
   React.useEffect(() => {
     onSearchChange(searchTerm, searchResults);
   }, [searchTerm, searchResults, onSearchChange]);

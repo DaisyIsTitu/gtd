@@ -203,7 +203,7 @@ export const PRIORITY_LABELS: Record<TodoPriority, string> = {
 // 상태별 한글 라벨
 export const STATUS_LABELS: Record<TodoStatus, string> = {
   WAITING: '대기중',
-  SCHEDULED: '예정됨',
+  SCHEDULED: '예정',
   IN_PROGRESS: '진행중',
   COMPLETED: '완료',
   MISSED: '놓침',

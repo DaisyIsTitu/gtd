@@ -60,7 +60,7 @@ export default function TodoSkeleton({ count = 6 }: TodoSkeletonProps) {
       {/* Todo 목록 스켈레톤 */}
       <div className="px-4 space-y-4">
         <TodoGroupSkeleton title="진행 중" count={Math.floor(count * 0.3) || 1} />
-        <TodoGroupSkeleton title="예정됨" count={Math.floor(count * 0.4) || 2} />
+        <TodoGroupSkeleton title="예정" count={Math.floor(count * 0.4) || 2} />
         <TodoGroupSkeleton title="대기 중" count={Math.floor(count * 0.3) || 1} />
       </div>
 

@@ -51,6 +51,9 @@ class SchedulingService {
     
     // WAITING 상태의 Todo만 필터링
     const waitingTodos = todos.filter(todo => todo.status === 'WAITING');
+
+    console.log('🔍 전체 todos:', todos.length);
+    console.log('🔍 WAITING 상태 todos:', waitingTodos.length);
     
     if (waitingTodos.length === 0) {
       return {
