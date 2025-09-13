@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://gtd_user:gtd_password@localhost:5432/gtd_timeblocking"
+      ],
+      "env": {
+        "PGPASSWORD": "gtd_password"
+      }
+    }
+  }
+}
