@@ -28,15 +28,15 @@ export default function CurrentTimeIndicator({ weekDays }: CurrentTimeIndicatorP
     );
   };
 
-  // 현재 시간의 위치 계산 (6:00 기준)
+  // 현재 시간의 위치 계산 (10:00 기준)
   const getCurrentTimePosition = () => {
     const hour = currentTime.getHours();
     const minute = currentTime.getMinutes();
-    
-    // 6:00 이전이거나 23:00 이후면 표시하지 않음
-    if (hour < 6 || hour >= 23) return -1;
-    
-    const relativeHour = hour - 6;
+
+    // 10:00 이전이거나 21:00 이후면 표시하지 않음
+    if (hour < 10 || hour >= 21) return -1;
+
+    const relativeHour = hour - 10;
     return (relativeHour * 80) + (minute / 60 * 80); // 80px per hour
   };
 

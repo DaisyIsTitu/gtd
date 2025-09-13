@@ -1,8 +1,8 @@
 import { WORK_HOURS, CALENDAR_HOURS, isWorkHour, isLunchTime } from '@/lib/constants';
 
 export default function TimeGrid() {
-  // 6:00 AM ~ 11:00 PM (23:00) - 18시간
-  const hours = Array.from({ length: CALENDAR_HOURS.END - CALENDAR_HOURS.START + 1 }, (_, i) => i + CALENDAR_HOURS.START);
+  // 10:00 AM ~ 8:00 PM (20:00) - 11시간
+  const hours = Array.from({ length: CALENDAR_HOURS.END - CALENDAR_HOURS.START }, (_, i) => i + CALENDAR_HOURS.START);
 
   const formatHour = (hour: number) => {
     if (hour === 12) return '12 PM';

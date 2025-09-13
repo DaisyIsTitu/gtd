@@ -133,8 +133,8 @@ export const WORK_HOURS = {
 
 // 캘린더 시간 설정
 export const CALENDAR_HOURS = {
-  START: 6,  // 6:00 AM
-  END: 23,   // 11:00 PM (23:00)
+  START: 10, // 10:00 AM
+  END: 21,   // 9:00 PM (21:00) - 8시까지 표시하려면 21로 설정
   SLOT_HEIGHT: 80, // 1시간당 높이 (px)
   HALF_SLOT_HEIGHT: 40, // 30분당 높이 (px)
 } as const;

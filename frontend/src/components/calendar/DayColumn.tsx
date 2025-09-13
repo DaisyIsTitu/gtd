@@ -28,11 +28,11 @@ export default function DayColumn({
     return todos.find(todo => todo.id === schedule.todoId);
   };
 
-  // 시간 위치 계산 (6:00을 기준 0으로)
+  // 시간 위치 계산 (10:00을 기준 0으로)
   const getTimePosition = (time: Date) => {
     const hour = time.getHours();
     const minute = time.getMinutes();
-    const relativeHour = hour - 6; // 6:00을 기준으로 상대적 시간
+    const relativeHour = hour - 10; // 10:00을 기준으로 상대적 시간
     return (relativeHour * 80) + (minute / 60 * 80); // 각 시간을 80px로 설정
   };
 

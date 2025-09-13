@@ -84,7 +84,7 @@ export default function WeeklyCalendar({
         onToday={handleToday}
       />
       
-      <div className="flex h-[600px] overflow-hidden">
+      <div className="flex h-[880px] overflow-hidden">
         {/* 시간 축 */}
         <TimeGrid />
         
