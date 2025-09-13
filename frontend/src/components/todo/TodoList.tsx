@@ -3,15 +3,20 @@
 import { useMemo } from 'react';
 import { Todo, FilterOptions } from '@/types';
 import TodoItem from './TodoItem';
+import { ListErrorFallback, InlineErrorDisplay } from '@/components/ui/ErrorDisplay';
 
 interface TodoListProps {
   todos: Todo[];
   filters: FilterOptions;
   onTodoClick?: (todo: Todo) => void;
   onDragStart?: (e: React.DragEvent, todo: Todo) => void;
+  // 에러 상태 관리
+  error?: Error | null;
+  onRetry?: () => void;
+  isLoading?: boolean;
 }
 
-export default function TodoList({ todos, filters, onTodoClick, onDragStart }: TodoListProps) {
+export default function TodoList({ todos, filters, onTodoClick, onDragStart, error, onRetry, isLoading }: TodoListProps) {
   // 필터링된 Todo 목록
   const filteredTodos = useMemo(() => {
     return todos.filter(todo => {
@@ -112,6 +117,18 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart }: T
   };
 
   const { active: activeCount, total: totalCount } = getTodoCount();
+
+  // 에러 상태 처리
+  if (error) {
+    return (
+      <div className="flex-1">
+        <ListErrorFallback 
+          onRetry={onRetry}
+          message={error.message || '할 일 목록을 불러오는 중 오류가 발생했습니다.'}
+        />
+      </div>
+    );
+  }
 
   if (sortedTodos.length === 0) {
     return (

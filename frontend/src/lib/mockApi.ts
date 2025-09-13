@@ -17,7 +17,40 @@ const STORAGE_KEYS = {
   SCHEDULES: 'gtd_schedules',
   LAST_TODO_ID: 'gtd_last_todo_id',
   LAST_SCHEDULE_ID: 'gtd_last_schedule_id',
+  ERROR_CONFIG: 'gtd_error_config',
 } as const;
+
+// 에러 시뮬레이션 설정 타입
+interface ErrorSimulationConfig {
+  enabled: boolean;
+  errorRate: number; // 0-100 사이의 백분율
+  networkFailureRate: number; // 네트워크 실패 시뮬레이션
+  specificErrors: {
+    getTodos: boolean;
+    createTodo: boolean;
+    updateTodo: boolean;
+    deleteTodo: boolean;
+    autoSchedule: boolean;
+  };
+  slowResponse: boolean; // 느린 응답 시뮬레이션
+  slowResponseDelay: number; // 느린 응답 지연 시간(ms)
+}
+
+// 기본 에러 시뮬레이션 설정
+const DEFAULT_ERROR_CONFIG: ErrorSimulationConfig = {
+  enabled: false,
+  errorRate: 20, // 20% 에러율
+  networkFailureRate: 10,
+  specificErrors: {
+    getTodos: false,
+    createTodo: false,
+    updateTodo: false,
+    deleteTodo: false,
+    autoSchedule: false,
+  },
+  slowResponse: false,
+  slowResponseDelay: 2000, // 2초
+};
 
 // localStorage 유틸리티 함수들
 export const storageUtils = {
@@ -108,9 +141,84 @@ const generateScheduleId = (): string => {
   return `schedule-${newId}`;
 };
 
+// 에러 시뮬레이션 헬퍼 함수들
+const getErrorConfig = (): ErrorSimulationConfig => {
+  return storageUtils.getItem(STORAGE_KEYS.ERROR_CONFIG, DEFAULT_ERROR_CONFIG);
+};
+
+const shouldSimulateError = (operation: keyof ErrorSimulationConfig['specificErrors']): boolean => {
+  const config = getErrorConfig();
+  
+  if (!config.enabled) {
+    return false;
+  }
+  
+  // 특정 오퍼레이션에 대한 강제 에러가 설정된 경우
+  if (config.specificErrors[operation]) {
+    return true;
+  }
+  
+  // 일반 에러율에 따른 랜덤 에러 발생
+  const randomValue = Math.random() * 100;
+  return randomValue < config.errorRate;
+};
+
+const shouldSimulateNetworkError = (): boolean => {
+  const config = getErrorConfig();
+  
+  if (!config.enabled) {
+    return false;
+  }
+  
+  const randomValue = Math.random() * 100;
+  return randomValue < config.networkFailureRate;
+};
+
+const getSimulationDelay = (): number => {
+  const config = getErrorConfig();
+  
+  if (config.slowResponse) {
+    return config.slowResponseDelay;
+  }
+  
+  return 300; // 기본 지연 시간
+};
+
+const createNetworkError = (operation: string): Error => {
+  const errorMessages = [
+    '네트워크 연결이 불안정합니다.',
+    '서버에 연결할 수 없습니다.',
+    '요청 시간이 초과되었습니다.',
+    '일시적인 네트워크 오류가 발생했습니다.',
+  ];
+  
+  const randomMessage = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+  const error = new Error(randomMessage);
+  error.name = 'NetworkError';
+  return error;
+};
+
+const createOperationError = (operation: string): Error => {
+  const errorMessages = {
+    getTodos: ['할 일 목록을 불러올 수 없습니다.', '데이터베이스 연결 오류가 발생했습니다.'],
+    createTodo: ['할 일 생성에 실패했습니다.', '필수 정보가 누락되었습니다.'],
+    updateTodo: ['할 일 수정에 실패했습니다.', '권한이 없습니다.'],
+    deleteTodo: ['할 일 삭제에 실패했습니다.', '이미 삭제된 항목입니다.'],
+    autoSchedule: ['스케줄링 알고리즘 오류가 발생했습니다.', '사용 가능한 시간이 부족합니다.'],
+  };
+  
+  const messages = errorMessages[operation as keyof typeof errorMessages] || ['알 수 없는 오류가 발생했습니다.'];
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  
+  const error = new Error(randomMessage);
+  error.name = 'OperationError';
+  return error;
+};
+
 // API 응답 지연 시뮬레이션
-const delay = (ms: number = 300): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms?: number): Promise<void> => {
+  const delayMs = ms || getSimulationDelay();
+  return new Promise(resolve => setTimeout(resolve, delayMs));
 };
 
 // API 응답 래퍼 함수
@@ -146,6 +254,16 @@ export const todoApi = {
     filters?: FilterOptions
   ): Promise<PaginatedResponse<Todo>> => {
     await delay();
+    
+    // 네트워크 에러 시뮬레이션
+    if (shouldSimulateNetworkError()) {
+      throw createNetworkError('getTodos');
+    }
+    
+    // 특정 오퍼레이션 에러 시뮬레이션
+    if (shouldSimulateError('getTodos')) {
+      throw createOperationError('getTodos');
+    }
     
     try {
       let todos = storageUtils.getItem<Todo[]>(STORAGE_KEYS.TODOS, []);
@@ -579,5 +697,131 @@ export const mockApiUtils = {
     } catch (error) {
       return createApiResponse<any>(null, false, 'localStorage 정보 조회 중 오류가 발생했습니다.');
     }
+  }
+};
+
+// 에러 시뮬레이션 제어 API
+export const errorSimulationApi = {
+  // 에러 시뮬레이션 설정 조회
+  getConfig: (): ErrorSimulationConfig => {
+    return getErrorConfig();
+  },
+
+  // 에러 시뮬레이션 설정 업데이트
+  updateConfig: (config: Partial<ErrorSimulationConfig>): void => {
+    const currentConfig = getErrorConfig();
+    const newConfig = { ...currentConfig, ...config };
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, newConfig);
+  },
+
+  // 에러 시뮬레이션 활성화/비활성화
+  setEnabled: (enabled: boolean): void => {
+    const config = getErrorConfig();
+    config.enabled = enabled;
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, config);
+  },
+
+  // 에러율 설정
+  setErrorRate: (rate: number): void => {
+    const config = getErrorConfig();
+    config.errorRate = Math.max(0, Math.min(100, rate)); // 0-100 사이로 제한
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, config);
+  },
+
+  // 특정 오퍼레이션 에러 강제 설정/해제
+  setOperationError: (operation: keyof ErrorSimulationConfig['specificErrors'], enabled: boolean): void => {
+    const config = getErrorConfig();
+    config.specificErrors[operation] = enabled;
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, config);
+  },
+
+  // 느린 응답 시뮬레이션 설정
+  setSlowResponse: (enabled: boolean, delay: number = 2000): void => {
+    const config = getErrorConfig();
+    config.slowResponse = enabled;
+    config.slowResponseDelay = delay;
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, config);
+  },
+
+  // 네트워크 실패율 설정
+  setNetworkFailureRate: (rate: number): void => {
+    const config = getErrorConfig();
+    config.networkFailureRate = Math.max(0, Math.min(100, rate));
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, config);
+  },
+
+  // 설정 초기화
+  resetConfig: (): void => {
+    storageUtils.setItem(STORAGE_KEYS.ERROR_CONFIG, DEFAULT_ERROR_CONFIG);
+  },
+
+  // 개발자 도우미: 일반적인 에러 시나리오들
+  scenarios: {
+    // 모든 에러 비활성화 (정상 동작)
+    normal: (): void => {
+      errorSimulationApi.updateConfig({
+        enabled: false,
+        errorRate: 0,
+        networkFailureRate: 0,
+        specificErrors: {
+          getTodos: false,
+          createTodo: false,
+          updateTodo: false,
+          deleteTodo: false,
+          autoSchedule: false,
+        },
+        slowResponse: false,
+      });
+    },
+
+    // 네트워크 불안정 시나리오
+    unstableNetwork: (): void => {
+      errorSimulationApi.updateConfig({
+        enabled: true,
+        errorRate: 10,
+        networkFailureRate: 30,
+        slowResponse: true,
+        slowResponseDelay: 3000,
+      });
+    },
+
+    // 할 일 조회 실패 시나리오
+    todoLoadFailure: (): void => {
+      errorSimulationApi.updateConfig({
+        enabled: true,
+        specificErrors: {
+          getTodos: true,
+          createTodo: false,
+          updateTodo: false,
+          deleteTodo: false,
+          autoSchedule: false,
+        },
+      });
+    },
+
+    // 스케줄링 실패 시나리오
+    schedulingFailure: (): void => {
+      errorSimulationApi.updateConfig({
+        enabled: true,
+        specificErrors: {
+          getTodos: false,
+          createTodo: false,
+          updateTodo: false,
+          deleteTodo: false,
+          autoSchedule: true,
+        },
+      });
+    },
+
+    // 높은 에러율 시나리오 (개발 테스트용)
+    highErrorRate: (): void => {
+      errorSimulationApi.updateConfig({
+        enabled: true,
+        errorRate: 50,
+        networkFailureRate: 20,
+        slowResponse: true,
+        slowResponseDelay: 1500,
+      });
+    },
   }
 };

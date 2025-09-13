@@ -180,3 +180,138 @@ a {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* 반응형 유틸리티 */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* 모바일 오버레이 */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* 사이드바 반응형 스타일 */
+.sidebar-mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 320px;
+  z-index: 50;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-mobile.open {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .sidebar-mobile {
+    position: static;
+    transform: none;
+    transition: none;
+    width: 320px;
+  }
+}
+
+/* 캘린더 반응형 스타일 */
+.calendar-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+  .calendar-container {
+    min-width: 800px;
+  }
+  
+  /* 모바일에서 캘린더 스크롤 */
+  .calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .calendar-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .calendar-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+  }
+  
+  .calendar-scroll::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+  }
+  
+  /* 작은 화면에서 헤더 텍스트 크기 조정 */
+  .header-mobile h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-mobile p {
+    font-size: 0.875rem;
+  }
+  
+  /* 모바일에서 버튼 간격 조정 */
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .header-actions button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* 태블릿 스타일 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar-tablet {
+    width: 280px;
+  }
+  
+  .calendar-tablet {
+    padding: 1rem;
+  }
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .todo-item:hover {
+    transform: none;
+  }
+  
+  .filter-button:hover {
+    transform: none;
+  }
+  
+  /* 터치 디바이스에서 더 큰 터치 영역 */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
