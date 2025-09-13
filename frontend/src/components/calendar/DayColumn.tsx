@@ -8,6 +8,7 @@ interface DayColumnProps {
   onScheduleClick?: (schedule: TodoSchedule) => void;
   onTimeSlotClick?: (date: Date, hour: number, minute: number) => void;
   isToday?: boolean;
+  isPreviewMode?: boolean;
 }
 
 export default function DayColumn({
@@ -16,7 +17,8 @@ export default function DayColumn({
   todos,
   onScheduleClick,
   onTimeSlotClick,
-  isToday = false
+  isToday = false,
+  isPreviewMode = false
 }: DayColumnProps) {
   // 6:00 AM ~ 11:00 PM (23:00) - 18시간
   const hours = Array.from({ length: 18 }, (_, i) => i + 6);
@@ -116,6 +118,7 @@ export default function DayColumn({
                 schedule={schedule}
                 todo={todo}
                 onClick={onScheduleClick}
+                isPreviewMode={isPreviewMode}
               />
             </div>
           );

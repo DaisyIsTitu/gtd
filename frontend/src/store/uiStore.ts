@@ -7,17 +7,22 @@ interface UIState {
   isAddTodoModalOpen: boolean;
   isEditTodoModalOpen: boolean;
   editingTodo: Todo | null;
-  
+
   // Sidebar State
   isSidebarCollapsed: boolean;
-  
+
   // Calendar View State
   calendarView: CalendarView;
-  
+
+  // Preview Mode State
+  isPreviewMode: boolean;
+  previewSchedules: any[];
+  previewResult: any | null;
+
   // Loading and Error States for UI operations
   uiLoading: boolean;
   uiError: string | null;
-  
+
   // Notification System
   notifications: Notification[];
   
@@ -35,7 +40,12 @@ interface UIState {
   setCalendarView: (view: CalendarView) => void;
   navigateToDate: (date: Date) => void;
   goToToday: () => void;
-  
+
+  // Actions for Preview Mode
+  enterPreviewMode: (schedules: any[], result: any) => void;
+  exitPreviewMode: () => void;
+  applyPreview: () => void;
+
   // Actions for UI State
   setUILoading: (loading: boolean) => void;
   setUIError: (error: string | null) => void;
@@ -70,6 +80,9 @@ export const useUIStore = create<UIState>()(
       editingTodo: null,
       isSidebarCollapsed: false,
       calendarView: initialCalendarView,
+      isPreviewMode: false,
+      previewSchedules: [],
+      previewResult: null,
       uiLoading: false,
       uiError: null,
       notifications: [],
@@ -143,13 +156,39 @@ export const useUIStore = create<UIState>()(
       goToToday: () => {
         const { calendarView } = get();
         const today = new Date();
-        set({ 
+        set({
           calendarView: {
             ...calendarView,
             currentDate: today,
             selectedDate: today,
           }
         }, false, 'goToToday');
+      },
+
+      // Preview Mode Actions
+      enterPreviewMode: (schedules, result) => {
+        set({
+          isPreviewMode: true,
+          previewSchedules: schedules,
+          previewResult: result,
+        }, false, 'enterPreviewMode');
+      },
+
+      exitPreviewMode: () => {
+        set({
+          isPreviewMode: false,
+          previewSchedules: [],
+          previewResult: null,
+        }, false, 'exitPreviewMode');
+      },
+
+      applyPreview: () => {
+        // Preview를 실제로 적용하고 미리보기 모드 종료
+        set({
+          isPreviewMode: false,
+          previewSchedules: [],
+          previewResult: null,
+        }, false, 'applyPreview');
       },
 
       // UI State Actions
@@ -232,6 +271,15 @@ export const useCalendarView = () => useUIStore(state => ({
   setView: state.setCalendarView,
   navigateToDate: state.navigateToDate,
   goToToday: state.goToToday,
+}));
+
+export const usePreviewMode = () => useUIStore(state => ({
+  isPreviewMode: state.isPreviewMode,
+  previewSchedules: state.previewSchedules,
+  previewResult: state.previewResult,
+  enterPreviewMode: state.enterPreviewMode,
+  exitPreviewMode: state.exitPreviewMode,
+  applyPreview: state.applyPreview,
 }));
 
 export const useUILoading = () => useUIStore(state => state.uiLoading);

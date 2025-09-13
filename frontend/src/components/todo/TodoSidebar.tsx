@@ -14,6 +14,8 @@ interface TodoSidebarProps {
   onTodoClick: (todo: Todo) => void;
   onDragStart: (e: React.DragEvent, todo: Todo) => void;
   onAddTodo: () => void;
+  onAutoSchedule?: () => void;
+  autoScheduleLoading?: boolean;
 }
 
 export default function TodoSidebar({
@@ -23,6 +25,8 @@ export default function TodoSidebar({
   onTodoClick,
   onDragStart,
   onAddTodo,
+  onAutoSchedule,
+  autoScheduleLoading = false,
 }: TodoSidebarProps) {
   // Filter state
   const [filters, setFilters] = useState<FilterOptions>({
@@ -159,16 +163,25 @@ export default function TodoSidebar({
             
             {/* 자동 배치 버튼 */}
             <button
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-              title="자동 배치"
-              onClick={() => {
-                // TODO: 자동 배치 기능 구현
-                console.log('자동 배치 기능');
-              }}
+              className={`p-1.5 rounded-lg transition-colors ${
+                autoScheduleLoading
+                  ? 'text-blue-600 bg-blue-50 cursor-not-allowed'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+              title={autoScheduleLoading ? "자동 배치 진행 중..." : "자동 배치"}
+              onClick={onAutoSchedule}
+              disabled={autoScheduleLoading || waitingTodos.length === 0}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              {autoScheduleLoading ? (
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
             </button>
           </div>
         </div>

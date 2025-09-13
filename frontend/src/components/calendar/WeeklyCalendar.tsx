@@ -12,13 +12,15 @@ interface WeeklyCalendarProps {
   todos?: Todo[];
   onScheduleClick?: (schedule: TodoSchedule) => void;
   onTimeSlotClick?: (date: Date, hour: number, minute: number) => void;
+  isPreviewMode?: boolean;
 }
 
 export default function WeeklyCalendar({
   schedules = [],
   todos = [],
   onScheduleClick,
-  onTimeSlotClick
+  onTimeSlotClick,
+  isPreviewMode = false
 }: WeeklyCalendarProps) {
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
@@ -99,6 +101,7 @@ export default function WeeklyCalendar({
               isToday={
                 date.toDateString() === new Date().toDateString()
               }
+              isPreviewMode={isPreviewMode}
             />
           ))}
         </div>

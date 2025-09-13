@@ -83,6 +83,7 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
       active: [] as Todo[],
       scheduled: [] as Todo[],
       waiting: [] as Todo[],
+      missed: [] as Todo[],
       completed: [] as Todo[],
       other: [] as Todo[],
     };
@@ -97,6 +98,9 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
           break;
         case 'WAITING':
           groups.waiting.push(todo);
+          break;
+        case 'MISSED':
+          groups.missed.push(todo);
           break;
         case 'COMPLETED':
           groups.completed.push(todo);
@@ -215,6 +219,26 @@ export default function TodoList({ todos, filters, onTodoClick, onDragStart, err
             </h4>
             <div className="space-y-2">
               {groupedTodos.waiting.map(todo => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  onTodoClick={onTodoClick}
+                  onDragStart={onDragStart}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 놓친 할 일 */}
+        {groupedTodos.missed.length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
+              <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+              놓친 할 일 ({groupedTodos.missed.length})
+            </h4>
+            <div className="space-y-2">
+              {groupedTodos.missed.map(todo => (
                 <TodoItem
                   key={todo.id}
                   todo={todo}

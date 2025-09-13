@@ -3,11 +3,11 @@
 import { useEffect } from 'react';
 import WeeklyCalendar from '@/components/calendar/WeeklyCalendar';
 import TodoSidebar from '@/components/todo/TodoSidebar';
+import PreviewActionBar from '@/components/calendar/PreviewActionBar';
 import NotificationSystem from '@/components/ui/NotificationSystem';
 import TodoAddModal from '@/components/todo/TodoAddModal';
 import TodoEditModal from '@/components/todo/TodoEditModal';
 import { CalendarLoadingIndicator } from '@/components/ui/CalendarSkeleton';
-import { mockSchedules } from '@/lib/mockData';
 import { TodoSchedule } from '@/types';
 import {
   useTodoStore,
@@ -18,13 +18,16 @@ import {
   useAddTodoModal,
   useEditTodoModal,
   useAutoSchedule,
+  usePreviewMode,
+  useSchedules,
   useToast,
 } from '@/store';
 
 export default function HomePage() {
   // Store hooks
-  const { fetchTodos, createTodo, updateTodo, deleteTodo, clearError } = useTodoStore(state => ({
+  const { fetchTodos, fetchSchedules, createTodo, updateTodo, deleteTodo, clearError } = useTodoStore(state => ({
     fetchTodos: state.fetchTodos,
+    fetchSchedules: state.fetchSchedules,
     createTodo: state.createTodo,
     updateTodo: state.updateTodo,
     deleteTodo: state.deleteTodo,
@@ -37,22 +40,27 @@ export default function HomePage() {
   const waitingTodos = useWaitingTodos();
   const loading = useTodoLoading();
   const error = useTodoError();
+  const schedules = useSchedules();
   
   // Auto-scheduling hooks
   const autoSchedule = useAutoSchedule();
-  
+
+  // Preview mode hooks
+  const previewMode = usePreviewMode();
+
   // Modal hooks
   const addModal = useAddTodoModal();
   const editModal = useEditTodoModal();
-  
+
   // Toast notifications
   const toast = useToast();
 
-  // Load todos on component mount
+  // Load todos and schedules on component mount
   useEffect(() => {
     console.log('🚀 useEffect 실행 - fetchTodos 호출 시도');
     console.log('🚀 fetchTodos 함수:', typeof fetchTodos, fetchTodos);
     fetchTodos();
+    fetchSchedules();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency - only run on mount
 
@@ -117,12 +125,16 @@ export default function HomePage() {
     if (newTodo) {
       toast.success('할 일 생성 완료', `"${newTodo.title}"이(가) 생성되었습니다.`);
       addModal.close();
+      // Refresh schedules as new todos might affect display
+      fetchSchedules();
     }
   };
 
   const handleTodoUpdated = (updatedTodo: any) => {
     toast.success('할 일 수정 완료', `"${updatedTodo.title}"이(가) 수정되었습니다.`);
     editModal.close();
+    // Refresh schedules as updated todos might affect display
+    fetchSchedules();
   };
 
   const handleTodoDeleted = async (todoId: string) => {
@@ -130,6 +142,8 @@ export default function HomePage() {
     if (success) {
       toast.success('할 일 삭제 완료', '할 일이 삭제되었습니다.');
       editModal.close();
+      // Refresh schedules as deleted todos might affect display
+      fetchSchedules();
     }
   };
 
@@ -139,7 +153,38 @@ export default function HomePage() {
       return;
     }
 
-    await autoSchedule.autoSchedule();
+    try {
+      const result = await autoSchedule.autoSchedule();
+
+      // Enter preview mode with the scheduling result
+      if (result && result.success) {
+        previewMode.enterPreviewMode(result.scheduledTodos || [], result);
+        toast.info('미리보기 모드', '배치 결과를 확인하고 적용 또는 취소를 선택하세요.');
+      }
+    } catch (error) {
+      console.error('Auto-scheduling failed:', error);
+    }
+  };
+
+  // Preview mode handlers
+  const handlePreviewApply = () => {
+    previewMode.applyPreview();
+    toast.success('자동 배치 적용', '일정이 성공적으로 적용되었습니다.');
+    // Refresh schedules after applying preview
+    fetchSchedules();
+  };
+
+  const handlePreviewRetry = async () => {
+    previewMode.exitPreviewMode();
+    // Retry auto-scheduling
+    setTimeout(() => {
+      handleAutoSchedule();
+    }, 100);
+  };
+
+  const handlePreviewCancel = () => {
+    previewMode.exitPreviewMode();
+    toast.info('배치 취소', '자동 배치가 취소되었습니다.');
   };
 
   return (
@@ -247,26 +292,41 @@ export default function HomePage() {
         </div>
       </header>
       
+      {/* Preview Mode Action Bar */}
+      {previewMode.isPreviewMode && (
+        <PreviewActionBar
+          previewResult={previewMode.previewResult}
+          onApply={handlePreviewApply}
+          onRetry={handlePreviewRetry}
+          onCancel={handlePreviewCancel}
+        />
+      )}
+
       {/* 메인 컨텐츠 */}
       <div className="flex h-[calc(100vh-88px)] relative">
         {/* Todo 사이드바 */}
         <TodoSidebar
           todos={todos || []}
+          loading={loading}
+          error={error}
           onTodoClick={handleTodoClick}
           onDragStart={handleTodoDragStart}
           onAddTodo={addModal.open}
+          onAutoSchedule={handleAutoSchedule}
+          autoScheduleLoading={autoSchedule.loading}
         />
-        
+
         {/* 캘린더 영역 */}
         <div className="flex-1 p-2 md:p-4 calendar-scroll">
           {loading ? (
             <CalendarLoadingIndicator />
           ) : (
             <WeeklyCalendar
-              schedules={mockSchedules}
+              schedules={previewMode.isPreviewMode ? previewMode.previewSchedules : schedules}
               todos={todos || []}
               onScheduleClick={handleScheduleClick}
               onTimeSlotClick={handleTimeSlotClick}
+              isPreviewMode={previewMode.isPreviewMode}
             />
           )}
         </div>

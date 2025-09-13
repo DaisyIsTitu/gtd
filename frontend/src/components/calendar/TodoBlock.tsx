@@ -13,9 +13,10 @@ interface TodoBlockProps {
   schedule: TodoSchedule;
   todo: Todo;
   onClick?: (schedule: TodoSchedule) => void;
+  isPreviewMode?: boolean;
 }
 
-export default function TodoBlock({ schedule, todo, onClick }: TodoBlockProps) {
+export default function TodoBlock({ schedule, todo, onClick, isPreviewMode = false }: TodoBlockProps) {
   const categoryColors = getCategoryColor(todo.category);
   const statusColors = getStatusColor(todo.status);
   const priorityColors = getPriorityColor(todo.priority);
@@ -23,17 +24,29 @@ export default function TodoBlock({ schedule, todo, onClick }: TodoBlockProps) {
   // 상태에 따른 스타일 적용
   const getBlockStyles = () => {
     let baseStyles = 'p-2 rounded-md border cursor-pointer transition-all duration-200 hover:shadow-md';
-    
+
+    // Preview mode 스타일
+    if (isPreviewMode) {
+      baseStyles += ' ring-2 ring-green-400 ring-offset-1 shadow-lg animate-pulse border-green-300';
+      return baseStyles;
+    }
+
     // 상태별 스타일
     switch (todo.status) {
       case 'IN_PROGRESS':
-        baseStyles += ' ring-2 ring-offset-1 animate-pulse';
+        baseStyles += ' ring-2 ring-blue-400 ring-offset-1 animate-pulse border-blue-300';
         break;
       case 'COMPLETED':
-        baseStyles += ' opacity-60 line-through';
+        baseStyles += ' opacity-60 line-through bg-gray-50';
         break;
       case 'MISSED':
-        baseStyles += ' ring-2 ring-offset-1';
+        baseStyles += ' ring-2 ring-red-400 ring-offset-1 animate-pulse border-red-300 bg-red-50';
+        break;
+      case 'WAITING':
+        baseStyles += ' border-gray-300 bg-gray-50';
+        break;
+      case 'SCHEDULED':
+        baseStyles += ' border-blue-300 bg-blue-50';
         break;
       default:
         baseStyles += ' hover:scale-[1.02] active:scale-[0.98]';
@@ -89,6 +102,7 @@ export default function TodoBlock({ schedule, todo, onClick }: TodoBlockProps) {
         <h3 className={`font-medium text-sm leading-tight flex-1 mr-1 ${
           todo.status === 'COMPLETED' ? 'line-through opacity-60' : ''
         }`}>
+          {isPreviewMode && <span className="mr-1">✨</span>}
           {todo.title}
         </h3>
         <div className="flex items-center space-x-1">
