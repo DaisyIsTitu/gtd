@@ -46,7 +46,6 @@ CREATE TABLE todos (
     priority todo_priority DEFAULT 'MEDIUM',
     status todo_status DEFAULT 'WAITING',
     deadline TIMESTAMP,
-    tags TEXT[], -- PostgreSQL 배열 타입
     is_split BOOLEAN DEFAULT FALSE,
     parent_todo_id BIGINT REFERENCES todos(id) ON DELETE CASCADE, -- 분할된 할일의 경우 원본 할일 ID
     split_index INTEGER, -- 분할 순서 (1, 2, 3, ...)
@@ -56,7 +55,14 @@ CREATE TABLE todos (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. todo_schedules 테이블
+-- 3. todo_tags 테이블 (@ElementCollection용)
+CREATE TABLE todo_tags (
+    todo_id BIGINT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+    tag VARCHAR(255) NOT NULL,
+    PRIMARY KEY (todo_id, tag)
+);
+
+-- 4. todo_schedules 테이블
 CREATE TABLE todo_schedules (
     id BIGSERIAL PRIMARY KEY,
     todo_id BIGINT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
@@ -71,7 +77,7 @@ CREATE TABLE todo_schedules (
     CONSTRAINT check_start_end_time CHECK (start_time < end_time)
 );
 
--- 4. calendar_sync 테이블
+-- 5. calendar_sync 테이블
 CREATE TABLE calendar_sync (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -85,7 +91,7 @@ CREATE TABLE calendar_sync (
     UNIQUE(user_id, google_calendar_id)
 );
 
--- 5. google_calendar_events 테이블
+-- 6. google_calendar_events 테이블
 CREATE TABLE google_calendar_events (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -105,7 +111,7 @@ CREATE TABLE google_calendar_events (
     CONSTRAINT check_start_end_time CHECK (start_time < end_time)
 );
 
--- 6. todo_status_history 테이블
+-- 7. todo_status_history 테이블
 CREATE TABLE todo_status_history (
     id BIGSERIAL PRIMARY KEY,
     todo_id BIGINT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
@@ -116,7 +122,7 @@ CREATE TABLE todo_status_history (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. user_preferences 테이블
+-- 8. user_preferences 테이블
 CREATE TABLE user_preferences (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -197,5 +203,76 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+-- 인덱스 생성
+-- users 테이블 인덱스
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_google_id ON users(google_id);
+
+-- todos 테이블 인덱스
+CREATE INDEX idx_todos_user_id ON todos(user_id);
+CREATE INDEX idx_todos_status ON todos(status);
+CREATE INDEX idx_todos_category ON todos(category);
+CREATE INDEX idx_todos_deadline ON todos(deadline);
+CREATE INDEX idx_todos_created_at ON todos(created_at);
+CREATE INDEX idx_todos_parent_todo_id ON todos(parent_todo_id);
+
+-- todo_tags 테이블 인덱스
+CREATE INDEX idx_todo_tags_todo_id ON todo_tags(todo_id);
+CREATE INDEX idx_todo_tags_tag ON todo_tags(tag);
+
+-- todo_schedules 테이블 인덱스
+CREATE INDEX idx_todo_schedules_todo_id ON todo_schedules(todo_id);
+CREATE INDEX idx_todo_schedules_start_time ON todo_schedules(start_time);
+CREATE INDEX idx_todo_schedules_end_time ON todo_schedules(end_time);
+CREATE INDEX idx_todo_schedules_time_range ON todo_schedules(start_time, end_time);
+CREATE INDEX idx_todo_schedules_google_event_id ON todo_schedules(google_calendar_event_id);
+
+-- calendar_sync 테이블 인덱스
+CREATE INDEX idx_calendar_sync_user_id ON calendar_sync(user_id);
+CREATE INDEX idx_calendar_sync_last_sync_at ON calendar_sync(last_sync_at);
+
+-- google_calendar_events 테이블 인덱스
+CREATE INDEX idx_google_events_user_id ON google_calendar_events(user_id);
+CREATE INDEX idx_google_events_time_range ON google_calendar_events(start_time, end_time);
+CREATE INDEX idx_google_events_google_id ON google_calendar_events(google_event_id);
+
+-- todo_status_history 테이블 인덱스
+CREATE INDEX idx_todo_status_history_todo_id ON todo_status_history(todo_id);
+CREATE INDEX idx_todo_status_history_changed_at ON todo_status_history(changed_at);
+
+-- user_preferences 테이블 인덱스
+CREATE INDEX idx_user_preferences_user_id ON user_preferences(user_id);
+CREATE INDEX idx_user_preferences_key ON user_preferences(setting_key);
+
+-- 트리거 생성
+-- 각 테이블에 업데이트 트리거 적용
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_todos_updated_at BEFORE UPDATE ON todos
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_todo_schedules_updated_at BEFORE UPDATE ON todo_schedules
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_calendar_sync_updated_at BEFORE UPDATE ON calendar_sync
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_google_calendar_events_updated_at BEFORE UPDATE ON google_calendar_events
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_preferences_updated_at BEFORE UPDATE ON user_preferences
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 비즈니스 로직 트리거
+CREATE TRIGGER log_todo_status_change_trigger AFTER UPDATE ON todos
+    FOR EACH ROW EXECUTE FUNCTION log_todo_status_change();
+
+CREATE TRIGGER validate_todo_split_trigger BEFORE INSERT OR UPDATE ON todos
+    FOR EACH ROW EXECUTE FUNCTION validate_todo_split();
+
+CREATE TRIGGER prevent_schedule_overlap_trigger BEFORE INSERT OR UPDATE ON todo_schedules
+    FOR EACH ROW EXECUTE FUNCTION prevent_schedule_overlap();
 
 COMMIT;
