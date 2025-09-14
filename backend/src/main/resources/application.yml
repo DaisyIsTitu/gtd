@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: gtd
+  
+  # 데이터소스 설정 (PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gtd_timeblocking
+    username: ${DB_USERNAME:gtd_user}
+    password: ${DB_PASSWORD:gtd_password}
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA/Hibernate 설정
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발: update (테이블 자동 생성/수정), 운영: validate
+    show-sql: true
+    format-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    defer-datasource-initialization: true
+
+# 로깅 설정
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.example.gtd: DEBUG

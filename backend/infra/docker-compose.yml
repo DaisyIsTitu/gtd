@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: gtd-postgres
+    environment:
+      POSTGRES_DB: gtd_timeblocking
+      POSTGRES_USER: gtd_user
+      POSTGRES_PASSWORD: gtd_password
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - gtd-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gtd_user -d gtd_timeblocking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  gtd-network:
+    driver: bridge
