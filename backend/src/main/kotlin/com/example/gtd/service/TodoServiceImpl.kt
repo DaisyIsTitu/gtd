@@ -27,10 +27,6 @@ class TodoServiceImpl(
 
     /**
      * 할일 목록 조회 (필터링 및 페이징 지원)
-     * TODO: Implement filtered todo list retrieval
-     * - 필터 조건에 따라 적절한 Repository 메서드 호출
-     * - Page<Todo> → Page<TodoResponse> 변환
-     * - 성능 최적화를 위한 쿼리 선택 로직
      */
     override fun getTodos(
         userId: String,
@@ -39,35 +35,83 @@ class TodoServiceImpl(
         priority: TodoPriority?,
         pageable: Pageable
     ): Page<TodoResponse> {
-        // TODO: Implement getTodos method
-        // Consider using todoRepository.findTodosWithFilters() for complex filtering
-        throw NotImplementedError("getTodos method not yet implemented")
+        // 복합 필터링을 지원하는 동적 쿼리를 사용
+        val todosPage = todoRepository.findTodosWithFilters(
+            userId = userId,
+            status = status,
+            category = category,
+            priority = priority,
+            pageable = pageable
+        )
+
+        // Page<Todo>를 Page<TodoResponse>로 변환
+        return todosPage.map { todo -> TodoResponse.from(todo) }
     }
 
     /**
      * 할일 상세 조회
-     * TODO: Implement todo detail retrieval with security check
-     * - todoRepository.findByUserIdAndId()로 보안 검증
-     * - 스케줄 정보 포함한 상세 정보 로드
-     * - TodoDetailResponse.from()으로 변환
+     *
+     * 사용자 권한을 검증하고, 스케줄 정보를 포함한 할일의 상세 정보를 조회합니다.
+     *
+     * @param userId 조회할 사용자 ID (보안 검증용)
+     * @param todoId 조회할 할일 ID
+     * @return 할일 상세 정보 (스케줄 정보 포함)
+     * @throws NotFoundException 할일을 찾을 수 없는 경우
      */
     override fun getTodoById(userId: String, todoId: Long): TodoDetailResponse {
-        // TODO: Implement getTodoById method
-        throw NotImplementedError("getTodoById method not yet implemented")
+        // 사용자 권한 확인과 함께 할일 조회
+        val todo = todoRepository.findByUserIdAndId(userId, todoId)
+            .orElseThrow {
+                com.example.gtd.common.exception.NotFoundException(
+                    com.example.gtd.common.exception.ErrorCode.BIZ_TODO_NOT_FOUND,
+                    "ID가 $todoId 인 할일을 찾을 수 없습니다."
+                )
+            }
+
+        // 스케줄 정보를 포함한 상세 응답으로 변환
+        return TodoDetailResponse.from(todo)
     }
 
     /**
      * 새로운 할일 생성
-     * TODO: Implement todo creation logic
-     * - User 존재 여부 확인
-     * - Todo 엔티티 생성 및 연관관계 설정
-     * - 기본 상태는 WAITING으로 설정
-     * - 저장 후 응답 DTO 반환
+     *
+     * 사용자 존재 여부를 확인하고, 새로운 할일 엔티티를 생성하여 저장합니다.
+     * 기본 상태는 WAITING으로 설정됩니다.
+     *
+     * @param userId 할일을 생성할 사용자 ID
+     * @param request 할일 생성 요청 정보
+     * @return 생성된 할일 정보
+     * @throws NotFoundException 사용자를 찾을 수 없는 경우
      */
     @Transactional
     override fun createTodo(userId: String, request: TodoCreateRequest): TodoResponse {
-        // TODO: Implement createTodo method
-        throw NotImplementedError("createTodo method not yet implemented")
+        // 1. 사용자 존재 여부 확인
+        val user = userRepository.findById(userId)
+            .orElseThrow {
+                com.example.gtd.common.exception.NotFoundException(
+                    com.example.gtd.common.exception.ErrorCode.BIZ_USER_NOT_FOUND,
+                    "사용자를 찾을 수 없습니다: $userId"
+                )
+            }
+
+        // 2. Todo 엔티티 생성
+        val todo = com.example.gtd.domain.entity.Todo(
+            user = user,
+            title = request.title,
+            description = request.description,
+            estimatedDuration = request.estimatedDuration,
+            category = request.category,
+            priority = request.priority,
+            deadline = request.deadline,
+            tags = request.tags.toMutableList(),
+            status = TodoStatus.WAITING // 기본 상태는 대기중
+        )
+
+        // 3. 할일 저장
+        val savedTodo = todoRepository.save(todo)
+
+        // 4. 응답 DTO로 변환하여 반환
+        return TodoResponse.from(savedTodo)
     }
 
     /**
