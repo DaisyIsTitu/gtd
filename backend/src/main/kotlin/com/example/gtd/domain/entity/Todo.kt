@@ -108,9 +108,12 @@ class Todo(
     var priorityBoost: Int = 0
 
 ) : BaseEntity() {
-    
+
     @OneToMany(mappedBy = "parentTodo", cascade = [CascadeType.ALL], orphanRemoval = true)
     val childTodos: MutableList<Todo> = mutableListOf()
+
+    @OneToMany(mappedBy = "todo", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val schedules: MutableList<TodoSchedule> = mutableListOf()
     
     // 비즈니스 로직 메서드들
     fun addChildTodo(childTodo: Todo) {
@@ -132,6 +135,27 @@ class Todo(
     fun canBeStarted(): Boolean = status in listOf(TodoStatus.SCHEDULED, TodoStatus.WAITING)
     
     fun canBeCompleted(): Boolean = status in listOf(TodoStatus.IN_PROGRESS, TodoStatus.SCHEDULED)
+
+    // 스케줄 관리 메서드들
+    fun addSchedule(schedule: TodoSchedule) {
+        schedules.add(schedule)
+    }
+
+    fun removeSchedule(schedule: TodoSchedule) {
+        schedules.remove(schedule)
+    }
+
+    fun getTotalScheduledDuration(): Long {
+        return schedules.sumOf { it.getDuration() }
+    }
+
+    fun hasActiveSchedule(): Boolean {
+        return schedules.any { it.isInProgress() }
+    }
+
+    fun hasMissedSchedules(): Boolean {
+        return schedules.any { it.isMissed() }
+    }
     
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
