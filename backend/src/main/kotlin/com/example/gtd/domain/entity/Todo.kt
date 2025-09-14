@@ -22,10 +22,10 @@ class Todo(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
     
-    /** 할일을 소유한 사용자 ID */
-    @Column(name = "user_id", nullable = false)
-    @NotBlank
-    val userId: String,
+    /** 할일을 소유한 사용자 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    val user: User,
     
     /** 할일 제목 (최대 200자) */
     @Column(name = "title", nullable = false, length = 200)

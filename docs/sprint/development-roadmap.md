@@ -96,7 +96,6 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 - [ ] S1.B.6 User 엔티티 설계 (id, email, name, googleId, settings)
 - [ ] S1.B.7 Todo 엔티티 설계 (id, title, description, duration, category, priority, status)
 - [ ] S1.B.8 TodoSchedule 엔티티 설계 (id, todoId, startTime, endTime, splitInfo)
-- [ ] S1.B.9 초기 마이그레이션 스크립트 작성
 
 #### 기본 구조
 - [ ] S1.B.10 Repository, Service, Controller 레이어 구조
