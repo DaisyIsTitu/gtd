@@ -92,15 +92,15 @@ Google Calendar와 연동하여 할 일을 자동으로 최적의 시간에 배�
 - [x] S1.B.4 개발 환경별 설정 파일 구성
 
 #### 데이터베이스 설계
-- [ ] S1.B.5 PostgreSQL 연결 및 JPA 설정
-- [ ] S1.B.6 User 엔티티 설계 (id, email, name, googleId, settings)
-- [ ] S1.B.7 Todo 엔티티 설계 (id, title, description, duration, category, priority, status)
-- [ ] S1.B.8 TodoSchedule 엔티티 설계 (id, todoId, startTime, endTime, splitInfo)
+- [x] S1.B.5 PostgreSQL 연결 및 JPA 설정
+- [x] S1.B.6 User 엔티티 설계 (id, email, name, googleId, settings)
+- [x] S1.B.7 Todo 엔티티 설계 (id, title, description, duration, category, priority, status)
+- [x] S1.B.8 TodoSchedule 엔티티 설계 (id, todoId, startTime, endTime, splitInfo)
 
 #### 기본 구조
-- [ ] S1.B.10 Repository, Service, Controller 레이어 구조
-- [ ] S1.B.11 기본 Exception Handling
-- [ ] S1.B.12 API 응답 형식 표준화 (success, error 응답 래퍼)
+- [x] S1.B.10 Repository, Service, Controller 레이어 구조
+- [x] S1.B.11 기본 Exception Handling
+- [x] S1.B.12 API 응답 형식 표준화 (success, error 응답 래퍼)
 
 ### 결과물 (독립 완성)
 - **Frontend**: Mock API로 동작하는 완전한 UI 애플리케이션
