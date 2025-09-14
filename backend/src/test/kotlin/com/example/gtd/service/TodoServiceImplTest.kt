@@ -345,4 +345,121 @@ class TodoServiceImplTest {
             todoRepository.findByUserIdAndId(otherUserId, todoId)
         }
     }
+
+    @Test
+    @DisplayName("할일 생성 - 성공")
+    fun `createTodo should create and return new todo`() {
+        // given
+        val request = com.example.gtd.dto.request.TodoCreateRequest(
+            title = "새로운 할일",
+            description = "새로운 할일 설명",
+            estimatedDuration = 120,
+            category = TodoCategory.WORK,
+            priority = TodoPriority.HIGH,
+            deadline = LocalDateTime.now().plusDays(3),
+            tags = listOf("테스트", "할일")
+        )
+
+        val savedTodo = Todo(
+            id = 4L,
+            user = testUser,
+            title = request.title,
+            description = request.description,
+            estimatedDuration = request.estimatedDuration,
+            category = request.category,
+            priority = request.priority,
+            deadline = request.deadline,
+            tags = request.tags.toMutableList(),
+            status = TodoStatus.WAITING
+        )
+
+        every { userRepository.findById(testUserId) } returns Optional.of(testUser)
+        every { todoRepository.save(any<Todo>()) } returns savedTodo
+
+        // when
+        val result = todoService.createTodo(testUserId, request)
+
+        // then
+        assertThat(result.id).isEqualTo(4L)
+        assertThat(result.title).isEqualTo("새로운 할일")
+        assertThat(result.description).isEqualTo("새로운 할일 설명")
+        assertThat(result.estimatedDuration).isEqualTo(120)
+        assertThat(result.category).isEqualTo(TodoCategory.WORK)
+        assertThat(result.priority).isEqualTo(TodoPriority.HIGH)
+        assertThat(result.status).isEqualTo(TodoStatus.WAITING)
+        assertThat(result.tags).containsExactly("테스트", "할일")
+        assertThat(result.userId).isEqualTo(testUserId)
+
+        verify(exactly = 1) { userRepository.findById(testUserId) }
+        verify(exactly = 1) { todoRepository.save(any<Todo>()) }
+    }
+
+    @Test
+    @DisplayName("할일 생성 - 사용자가 존재하지 않는 경우")
+    fun `createTodo should throw NotFoundException when user does not exist`() {
+        // given
+        val request = com.example.gtd.dto.request.TodoCreateRequest(
+            title = "새로운 할일",
+            description = "새로운 할일 설명",
+            estimatedDuration = 120,
+            category = TodoCategory.WORK,
+            priority = TodoPriority.HIGH
+        )
+
+        val nonExistentUserId = "non-existent-user"
+
+        every { userRepository.findById(nonExistentUserId) } returns Optional.empty()
+
+        // when & then
+        val exception = assertThrows<NotFoundException> {
+            todoService.createTodo(nonExistentUserId, request)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.BIZ_USER_NOT_FOUND)
+        assertThat(exception.message).isEqualTo("사용자를 찾을 수 없습니다: $nonExistentUserId")
+
+        verify(exactly = 1) { userRepository.findById(nonExistentUserId) }
+        verify(exactly = 0) { todoRepository.save(any<Todo>()) }
+    }
+
+    @Test
+    @DisplayName("할일 생성 - 최소 필수 정보만으로 생성")
+    fun `createTodo should create todo with minimal required information`() {
+        // given
+        val request = com.example.gtd.dto.request.TodoCreateRequest(
+            title = "간단한 할일",
+            estimatedDuration = 30,
+            category = TodoCategory.PERSONAL
+            // description, priority, deadline, tags는 기본값 사용
+        )
+
+        val savedTodo = Todo(
+            id = 5L,
+            user = testUser,
+            title = request.title,
+            description = null,
+            estimatedDuration = request.estimatedDuration,
+            category = request.category,
+            priority = TodoPriority.MEDIUM, // 기본값
+            deadline = null,
+            tags = mutableListOf(),
+            status = TodoStatus.WAITING
+        )
+
+        every { userRepository.findById(testUserId) } returns Optional.of(testUser)
+        every { todoRepository.save(any<Todo>()) } returns savedTodo
+
+        // when
+        val result = todoService.createTodo(testUserId, request)
+
+        // then
+        assertThat(result.title).isEqualTo("간단한 할일")
+        assertThat(result.description).isNull()
+        assertThat(result.estimatedDuration).isEqualTo(30)
+        assertThat(result.category).isEqualTo(TodoCategory.PERSONAL)
+        assertThat(result.priority).isEqualTo(TodoPriority.MEDIUM)
+        assertThat(result.deadline).isNull()
+        assertThat(result.tags).isEmpty()
+        assertThat(result.status).isEqualTo(TodoStatus.WAITING)
+    }
 }

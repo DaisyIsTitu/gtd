@@ -74,16 +74,44 @@ class TodoServiceImpl(
 
     /**
      * 새로운 할일 생성
-     * TODO: Implement todo creation logic
-     * - User 존재 여부 확인
-     * - Todo 엔티티 생성 및 연관관계 설정
-     * - 기본 상태는 WAITING으로 설정
-     * - 저장 후 응답 DTO 반환
+     *
+     * 사용자 존재 여부를 확인하고, 새로운 할일 엔티티를 생성하여 저장합니다.
+     * 기본 상태는 WAITING으로 설정됩니다.
+     *
+     * @param userId 할일을 생성할 사용자 ID
+     * @param request 할일 생성 요청 정보
+     * @return 생성된 할일 정보
+     * @throws NotFoundException 사용자를 찾을 수 없는 경우
      */
     @Transactional
     override fun createTodo(userId: String, request: TodoCreateRequest): TodoResponse {
-        // TODO: Implement createTodo method
-        throw NotImplementedError("createTodo method not yet implemented")
+        // 1. 사용자 존재 여부 확인
+        val user = userRepository.findById(userId)
+            .orElseThrow {
+                com.example.gtd.common.exception.NotFoundException(
+                    com.example.gtd.common.exception.ErrorCode.BIZ_USER_NOT_FOUND,
+                    "사용자를 찾을 수 없습니다: $userId"
+                )
+            }
+
+        // 2. Todo 엔티티 생성
+        val todo = com.example.gtd.domain.entity.Todo(
+            user = user,
+            title = request.title,
+            description = request.description,
+            estimatedDuration = request.estimatedDuration,
+            category = request.category,
+            priority = request.priority,
+            deadline = request.deadline,
+            tags = request.tags.toMutableList(),
+            status = TodoStatus.WAITING // 기본 상태는 대기중
+        )
+
+        // 3. 할일 저장
+        val savedTodo = todoRepository.save(todo)
+
+        // 4. 응답 DTO로 변환하여 반환
+        return TodoResponse.from(savedTodo)
     }
 
     /**

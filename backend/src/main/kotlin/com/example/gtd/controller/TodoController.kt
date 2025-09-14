@@ -108,13 +108,19 @@ class TodoController(
     fun createTodo(
         @Valid @RequestBody request: TodoCreateRequest
     ): ResponseEntity<ApiResponse<TodoResponse>> {
-        // TODO: Implement createTodo endpoint
-        // - 인증된 사용자 ID 추출
-        // - @Valid로 요청 데이터 검증
-        // - todoService.createTodo() 호출
-        // - 201 Created 상태 코드와 함께 응답
-        // - "할일이 성공적으로 생성되었습니다." 메시지 포함
-        throw NotImplementedError("createTodo endpoint not yet implemented")
+        // TODO: Spring Security 구현 후 실제 인증된 사용자 ID 추출
+        // SecurityContextHolder.getContext().authentication.name 등 사용 예정
+        val userId = "test-user" // 임시 하드코딩
+
+        val createdTodo = todoService.createTodo(userId, request)
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(
+                ApiResponse.success(
+                    data = createdTodo,
+                    message = "할일이 성공적으로 생성되었습니다."
+                )
+            )
     }
 
     /**
