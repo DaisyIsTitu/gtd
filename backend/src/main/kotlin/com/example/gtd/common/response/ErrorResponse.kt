@@ -21,8 +21,8 @@ data class ErrorResponse(
         fun of(errorCode: ErrorCode, details: String? = null): ErrorResponse {
             return ErrorResponse(
                 error = ErrorDetail(
-                    code = errorCode.name,
-                    message = errorCode.name, // TODO: ErrorCode에서 실제 메시지 가져오기
+                    code = errorCode.code,
+                    message = errorCode.message,
                     details = details
                 )
             )

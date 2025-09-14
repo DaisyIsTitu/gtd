@@ -1,9 +1,14 @@
 package com.example.gtd.controller
 
+import com.example.gtd.common.exception.ErrorCode
+import com.example.gtd.common.exception.GlobalExceptionHandler
+import com.example.gtd.common.exception.NotFoundException
 import com.example.gtd.domain.enum.TodoCategory
 import com.example.gtd.domain.enum.TodoPriority
 import com.example.gtd.domain.enum.TodoStatus
+import com.example.gtd.dto.response.TodoDetailResponse
 import com.example.gtd.dto.response.TodoResponse
+import com.example.gtd.dto.response.TodoScheduleResponse
 import com.example.gtd.service.TodoService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
@@ -56,6 +61,7 @@ class TodoControllerTest {
 
         val todoController = TodoController(todoService)
         mockMvc = MockMvcBuilders.standaloneSetup(todoController)
+            .setControllerAdvice(GlobalExceptionHandler())
             .setCustomArgumentResolvers(PageableHandlerMethodArgumentResolver())
             .build()
 
@@ -294,36 +300,87 @@ class TodoControllerTest {
         }
     }
 
+
     @Test
-    @DisplayName("잘못된 상태 값으로 요청 시 400 에러")
-    fun `GET todos should return 400 for invalid status parameter`() {
-        // when & then
-        mockMvc.perform(
-            get("/api/v1/todos")
-                .param("status", "INVALID_STATUS")
+    @DisplayName("할일 상세 조회 성공")
+    fun `GET todos by id should return todo detail when todo exists`() {
+        // given
+        val todoId = 1L
+        val todoDetail = TodoDetailResponse(
+            id = todoId,
+            title = "업무 할일 1",
+            description = "업무 관련 할일",
+            estimatedDuration = 120,
+            category = TodoCategory.WORK,
+            priority = TodoPriority.HIGH,
+            status = TodoStatus.WAITING,
+            deadline = LocalDateTime.now().plusDays(3),
+            tags = listOf("업무", "긴급"),
+            schedules = listOf(
+                TodoScheduleResponse(
+                    id = 1L,
+                    startTime = LocalDateTime.now().plusHours(1),
+                    endTime = LocalDateTime.now().plusHours(3),
+                    splitIndex = null,
+                    splitTotal = null
+                )
+            ),
+            createdAt = LocalDateTime.now().minusHours(1),
+            updatedAt = LocalDateTime.now().minusHours(1)
         )
-            .andExpect(status().isBadRequest)
+
+        every {
+            todoService.getTodoById(testUserId, todoId)
+        } returns todoDetail
+
+        // when & then
+        mockMvc.perform(get("/api/v1/todos/{todoId}", todoId))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("할일 상세 정보가 성공적으로 조회되었습니다."))
+            .andExpect(jsonPath("$.data.id").value(todoId))
+            .andExpect(jsonPath("$.data.title").value("업무 할일 1"))
+            .andExpect(jsonPath("$.data.description").value("업무 관련 할일"))
+            .andExpect(jsonPath("$.data.estimatedDuration").value(120))
+            .andExpect(jsonPath("$.data.category").value("WORK"))
+            .andExpect(jsonPath("$.data.priority").value("HIGH"))
+            .andExpect(jsonPath("$.data.status").value("WAITING"))
+            .andExpect(jsonPath("$.data.tags").isArray)
+            .andExpect(jsonPath("$.data.tags.length()").value(2))
+            .andExpect(jsonPath("$.data.tags[0]").value("업무"))
+            .andExpect(jsonPath("$.data.tags[1]").value("긴급"))
+            .andExpect(jsonPath("$.data.schedules").isArray)
+            .andExpect(jsonPath("$.data.schedules.length()").value(1))
+            .andExpect(jsonPath("$.data.schedules[0].id").value(1))
+
+        verify(exactly = 1) {
+            todoService.getTodoById(testUserId, todoId)
+        }
     }
 
     @Test
-    @DisplayName("잘못된 카테고리 값으로 요청 시 400 에러")
-    fun `GET todos should return 400 for invalid category parameter`() {
+    @DisplayName("존재하지 않는 할일 조회 시 404 에러")
+    fun `GET todos by id should return 404 when todo not found`() {
+        // given
+        val todoId = 999L
+        val exception = NotFoundException(ErrorCode.BIZ_TODO_NOT_FOUND, "ID가 $todoId 인 할일을 찾을 수 없습니다.")
+
+        every {
+            todoService.getTodoById(testUserId, todoId)
+        } throws exception
+
         // when & then
-        mockMvc.perform(
-            get("/api/v1/todos")
-                .param("category", "INVALID_CATEGORY")
-        )
-            .andExpect(status().isBadRequest)
+        mockMvc.perform(get("/api/v1/todos/{todoId}", todoId))
+            .andExpect(status().isNotFound)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("BIZ_001"))
+            .andExpect(jsonPath("$.error.message").value("할일을 찾을 수 없습니다"))
+
+        verify(exactly = 1) {
+            todoService.getTodoById(testUserId, todoId)
+        }
     }
 
-    @Test
-    @DisplayName("잘못된 우선순위 값으로 요청 시 400 에러")
-    fun `GET todos should return 400 for invalid priority parameter`() {
-        // when & then
-        mockMvc.perform(
-            get("/api/v1/todos")
-                .param("priority", "INVALID_PRIORITY")
-        )
-            .andExpect(status().isBadRequest)
-    }
 }

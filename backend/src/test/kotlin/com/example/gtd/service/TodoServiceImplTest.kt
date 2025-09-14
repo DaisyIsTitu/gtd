@@ -1,5 +1,7 @@
 package com.example.gtd.service
 
+import com.example.gtd.common.exception.ErrorCode
+import com.example.gtd.common.exception.NotFoundException
 import com.example.gtd.domain.entity.Todo
 import com.example.gtd.domain.entity.User
 import com.example.gtd.domain.enum.TodoCategory
@@ -14,9 +16,11 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.data.domain.*
 import org.assertj.core.api.Assertions.*
 import java.time.LocalDateTime
+import java.util.Optional
 
 @DisplayName("TodoService - 할일 목록 조회 테스트")
 class TodoServiceImplTest {
@@ -265,5 +269,80 @@ class TodoServiceImplTest {
         assertThat(result.totalElements).isEqualTo(3) // 전체 요소 수
         assertThat(result.totalPages).isEqualTo(2) // 전체 페이지 수
         assertThat(result.content).hasSize(1) // 현재 페이지의 요소 수
+    }
+
+    @Test
+    @DisplayName("할일 상세 조회 - 성공")
+    fun `getTodoById should return todo detail when todo exists and user has access`() {
+        // given
+        val todoId = 1L
+        val testTodo = testTodos[0] // "업무 할일 1"
+
+        every {
+            todoRepository.findByUserIdAndId(testUserId, todoId)
+        } returns Optional.of(testTodo)
+
+        // when
+        val result = todoService.getTodoById(testUserId, todoId)
+
+        // then
+        assertThat(result.id).isEqualTo(todoId)
+        assertThat(result.title).isEqualTo("업무 할일 1")
+        assertThat(result.description).isEqualTo("업무 관련 할일")
+        assertThat(result.estimatedDuration).isEqualTo(120)
+        assertThat(result.category).isEqualTo(TodoCategory.WORK)
+        assertThat(result.priority).isEqualTo(TodoPriority.HIGH)
+        assertThat(result.status).isEqualTo(TodoStatus.WAITING)
+
+        verify(exactly = 1) {
+            todoRepository.findByUserIdAndId(testUserId, todoId)
+        }
+    }
+
+    @Test
+    @DisplayName("할일 상세 조회 - 할일이 존재하지 않는 경우")
+    fun `getTodoById should throw NotFoundException when todo does not exist`() {
+        // given
+        val todoId = 999L
+
+        every {
+            todoRepository.findByUserIdAndId(testUserId, todoId)
+        } returns Optional.empty()
+
+        // when & then
+        val exception = assertThrows<NotFoundException> {
+            todoService.getTodoById(testUserId, todoId)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.BIZ_TODO_NOT_FOUND)
+        assertThat(exception.message).isEqualTo("ID가 $todoId 인 할일을 찾을 수 없습니다.")
+
+        verify(exactly = 1) {
+            todoRepository.findByUserIdAndId(testUserId, todoId)
+        }
+    }
+
+    @Test
+    @DisplayName("할일 상세 조회 - 다른 사용자의 할일에 접근하는 경우")
+    fun `getTodoById should throw NotFoundException when user tries to access other user's todo`() {
+        // given
+        val todoId = 1L
+        val otherUserId = "other-user"
+
+        every {
+            todoRepository.findByUserIdAndId(otherUserId, todoId)
+        } returns Optional.empty()
+
+        // when & then
+        val exception = assertThrows<NotFoundException> {
+            todoService.getTodoById(otherUserId, todoId)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.BIZ_TODO_NOT_FOUND)
+        assertThat(exception.message).isEqualTo("ID가 $todoId 인 할일을 찾을 수 없습니다.")
+
+        verify(exactly = 1) {
+            todoRepository.findByUserIdAndId(otherUserId, todoId)
+        }
     }
 }

@@ -83,12 +83,18 @@ class TodoController(
     fun getTodoById(
         @PathVariable todoId: Long
     ): ResponseEntity<ApiResponse<TodoDetailResponse>> {
-        // TODO: Implement getTodoById endpoint
-        // - 인증된 사용자 ID 추출
-        // - todoService.getTodoById() 호출
-        // - 보안 검증 (사용자별 할일 접근 권한)
-        // - ApiResponse 래핑하여 응답
-        throw NotImplementedError("getTodoById endpoint not yet implemented")
+        // TODO: Spring Security 구현 후 실제 인증된 사용자 ID 추출
+        // SecurityContextHolder.getContext().authentication.name 등 사용 예정
+        val userId = "test-user" // 임시 하드코딩
+
+        val todoDetail = todoService.getTodoById(userId, todoId)
+
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = todoDetail,
+                message = "할일 상세 정보가 성공적으로 조회되었습니다."
+            )
+        )
     }
 
     /**

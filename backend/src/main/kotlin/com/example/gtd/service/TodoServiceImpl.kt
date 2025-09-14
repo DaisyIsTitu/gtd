@@ -50,14 +50,26 @@ class TodoServiceImpl(
 
     /**
      * 할일 상세 조회
-     * TODO: Implement todo detail retrieval with security check
-     * - todoRepository.findByUserIdAndId()로 보안 검증
-     * - 스케줄 정보 포함한 상세 정보 로드
-     * - TodoDetailResponse.from()으로 변환
+     *
+     * 사용자 권한을 검증하고, 스케줄 정보를 포함한 할일의 상세 정보를 조회합니다.
+     *
+     * @param userId 조회할 사용자 ID (보안 검증용)
+     * @param todoId 조회할 할일 ID
+     * @return 할일 상세 정보 (스케줄 정보 포함)
+     * @throws NotFoundException 할일을 찾을 수 없는 경우
      */
     override fun getTodoById(userId: String, todoId: Long): TodoDetailResponse {
-        // TODO: Implement getTodoById method
-        throw NotImplementedError("getTodoById method not yet implemented")
+        // 사용자 권한 확인과 함께 할일 조회
+        val todo = todoRepository.findByUserIdAndId(userId, todoId)
+            .orElseThrow {
+                com.example.gtd.common.exception.NotFoundException(
+                    com.example.gtd.common.exception.ErrorCode.BIZ_TODO_NOT_FOUND,
+                    "ID가 $todoId 인 할일을 찾을 수 없습니다."
+                )
+            }
+
+        // 스케줄 정보를 포함한 상세 응답으로 변환
+        return TodoDetailResponse.from(todo)
     }
 
     /**
