@@ -205,33 +205,49 @@ export const useTodoStore = create<TodoState>()(
         },
 
         createTodo: async (todoData) => {
+          console.log('🚀 createTodo 호출됨:', todoData);
           set({ loading: true, error: null }, false, 'createTodo:start');
-          
+
           try {
+            console.log('🚀 todoApi.createTodo 호출 전');
             const response = await todoApi.createTodo(todoData);
-            
+            console.log('🚀 todoApi.createTodo 응답:', response);
+
             if (response.success && response.data) {
               const newTodo = response.data;
               const { todos } = get();
-              
-              set({ 
-                todos: [...todos, newTodo], 
-                loading: false, 
-                error: null 
+              console.log('🚀 새 할일 생성:', newTodo);
+              console.log('🚀 기존 할일 개수:', todos.length);
+
+              const newTodos = [...todos, newTodo];
+              console.log('🚀 업데이트된 할일 개수:', newTodos.length);
+
+              set({
+                todos: newTodos,
+                loading: false,
+                error: null
               }, false, 'createTodo:success');
-              
+
+              // Update computed values after state change
+              get().updateComputedValues();
+
+              console.log('🚀 상태 업데이트 완료, 최종 할일 개수:', get().todos.length);
+              console.log('🚀 filteredTodos 개수:', get().filteredTodos.length);
+
               return newTodo;
             } else {
-              set({ 
-                loading: false, 
-                error: response.message || '할 일 생성에 실패했습니다.' 
+              console.log('🚨 createTodo API 응답 실패:', response);
+              set({
+                loading: false,
+                error: response.message || '할 일 생성에 실패했습니다.'
               }, false, 'createTodo:error');
               return null;
             }
           } catch (error) {
-            set({ 
-              loading: false, 
-              error: error instanceof Error ? error.message : '할 일 생성 중 오류가 발생했습니다.' 
+            console.log('🚨 createTodo 에러:', error);
+            set({
+              loading: false,
+              error: error instanceof Error ? error.message : '할 일 생성 중 오류가 발생했습니다.'
             }, false, 'createTodo:catch');
             return null;
           }
@@ -251,12 +267,15 @@ export const useTodoStore = create<TodoState>()(
                 todo.id === id ? updatedTodo : todo
               );
               
-              set({ 
-                todos: updatedTodos, 
+              set({
+                todos: updatedTodos,
                 selectedTodo: selectedTodo?.id === id ? updatedTodo : selectedTodo,
-                loading: false, 
-                error: null 
+                loading: false,
+                error: null
               }, false, 'updateTodo:success');
+
+              // Update computed values after state change
+              get().updateComputedValues();
               
               return updatedTodo;
             } else {
@@ -285,12 +304,15 @@ export const useTodoStore = create<TodoState>()(
               const { todos, selectedTodo } = get();
               const updatedTodos = todos.filter(todo => todo.id !== id);
               
-              set({ 
-                todos: updatedTodos, 
+              set({
+                todos: updatedTodos,
                 selectedTodo: selectedTodo?.id === id ? null : selectedTodo,
-                loading: false, 
-                error: null 
+                loading: false,
+                error: null
               }, false, 'deleteTodo:success');
+
+              // Update computed values after state change
+              get().updateComputedValues();
               
               return true;
             } else {
@@ -462,54 +484,24 @@ export const useTodoStore = create<TodoState>()(
 
 // Selector hooks for performance optimization
 export const useFilteredTodos = () => useTodoStore(state => {
-  console.log('🔍 filteredTodos getter 호출됨');
-  const { todos, filters } = state;
-  console.log('🔍 todos 개수:', todos.length);
-  console.log('🔍 filters:', filters);
-  
-  // Calculate filteredTodos
-  const filteredTodos = todos.filter(todo => {
-    // 카테고리 필터
-    if (filters.categories.length > 0 && !filters.categories.includes(todo.category)) {
-      return false;
-    }
-
-    // 우선순위 필터
-    if (filters.priorities.length > 0 && !filters.priorities.includes(todo.priority)) {
-      return false;
-    }
-
-    // 상태 필터
-    if (filters.statuses.length > 0 && !filters.statuses.includes(todo.status)) {
-      return false;
-    }
-
-    // 태그 필터
-    if (filters.tags.length > 0 && !filters.tags.some(tag => todo.tags.includes(tag))) {
-      return false;
-    }
-
-    return true;
-  });
-
-  console.log('🔍 필터링 후 todos 개수:', filteredTodos.length);
-  console.log('🔍 필터링된 첫 번째 todo:', filteredTodos[0]);
-
-  return filteredTodos;
+  console.log('🔍 useFilteredTodos 호출됨 - store의 filteredTodos 사용');
+  console.log('🔍 store filteredTodos 개수:', state.filteredTodos.length);
+  console.log('🔍 store filteredTodos 첫번째:', state.filteredTodos[0]);
+  return state.filteredTodos;
 });
 export const useActiveTodos = () => useTodoStore(state => {
-  const { todos } = state;
-  return todos.filter(todo => ['SCHEDULED', 'IN_PROGRESS'].includes(todo.status));
+  console.log('🔍 useActiveTodos 호출됨 - store의 activeTodos 사용');
+  return state.activeTodos;
 });
 
 export const useCompletedTodos = () => useTodoStore(state => {
-  const { todos } = state;
-  return todos.filter(todo => todo.status === 'COMPLETED');
+  console.log('🔍 useCompletedTodos 호출됨 - store의 completedTodos 사용');
+  return state.completedTodos;
 });
 
 export const useWaitingTodos = () => useTodoStore(state => {
-  const { todos } = state;
-  return todos.filter(todo => todo.status === 'WAITING');
+  console.log('🔍 useWaitingTodos 호출됨 - store의 waitingTodos 사용');
+  return state.waitingTodos;
 });
 export const useTodoLoading = () => useTodoStore(state => state.loading);
 export const useTodoError = () => useTodoStore(state => state.error);

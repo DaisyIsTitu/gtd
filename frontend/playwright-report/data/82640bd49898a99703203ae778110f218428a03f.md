@@ -1,0 +1,300 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - alert [ref=e5]:
+      - generic [ref=e6]:
+        - img "success" [ref=e8]: ✅
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - heading "할 일 생성 완료" [level=4] [ref=e12]
+            - paragraph [ref=e13]: "\"나의 첫 번째 할 일\"이(가) 생성되었습니다."
+          - button "알림 닫기" [ref=e14] [cursor=pointer]:
+            - img [ref=e15] [cursor=pointer]
+    - banner [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e22]:
+          - heading "Todo Time-blocking" [level=1] [ref=e23]
+          - paragraph [ref=e24]: 당신의 할 일을 명확한 일정으로 관리하세요.
+        - generic [ref=e25]:
+          - generic [ref=e26]: 총 10개의 할 일 (4개 대기중)
+          - button "🧪 테스트" [ref=e27] [cursor=pointer]
+          - button "4개 배치 중..." [disabled] [ref=e29]:
+            - img [ref=e31]
+            - generic [ref=e34]: 4개 배치 중...
+          - button "새 할 일" [ref=e37] [cursor=pointer]:
+            - img [ref=e38] [cursor=pointer]
+            - text: 새 할 일
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - heading "할 일" [level=2] [ref=e44]
+            - generic [ref=e45]:
+              - button "새 할 일 추가" [ref=e46] [cursor=pointer]:
+                - img [ref=e47] [cursor=pointer]
+              - button "자동 배치 진행 중..." [disabled] [ref=e49]:
+                - img [ref=e50]
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: "활성: 10"
+              - generic [ref=e56]: "전체: 10"
+            - generic [ref=e57]: 우선순위 ↓
+        - generic [ref=e60]:
+          - generic:
+            - img
+          - textbox "제목, 설명, 태그로 검색..." [ref=e61]
+        - generic [ref=e65]:
+          - heading "필터 & 정렬" [level=3] [ref=e67]
+          - button [ref=e69] [cursor=pointer]:
+            - img [ref=e70] [cursor=pointer]
+        - generic [ref=e73]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: 활성 10개 · 전체 10개
+            - generic [ref=e77]:
+              - generic [ref=e78]: 우선순위 ↓
+              - generic [ref=e79]: 드래그하여 일정에 추가
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - generic [ref=e83]: "1"
+              - generic [ref=e84] [cursor=pointer]:
+                - generic [ref=e87] [cursor=pointer]:
+                  - heading "독서 시간" [level=3] [ref=e90] [cursor=pointer]
+                  - generic [ref=e91] [cursor=pointer]:
+                    - generic [ref=e92] [cursor=pointer]:
+                      - generic "WAITING" [ref=e93] [cursor=pointer]: ⏳
+                      - generic [ref=e94] [cursor=pointer]: 대기
+                    - img [ref=e96]
+                - paragraph [ref=e98] [cursor=pointer]: 기술 서적 읽기
+                - generic [ref=e100] [cursor=pointer]:
+                  - generic [ref=e101] [cursor=pointer]:
+                    - generic [ref=e102] [cursor=pointer]: 📚
+                    - text: 학습
+                  - generic [ref=e103] [cursor=pointer]: ⏱ 1h
+                - generic [ref=e104] [cursor=pointer]:
+                  - generic [ref=e105] [cursor=pointer]: "#독서"
+                  - generic [ref=e106] [cursor=pointer]: "#학습"
+            - generic [ref=e107]:
+              - generic [ref=e108]: "2"
+              - generic [ref=e109]:
+                - generic [ref=e112]:
+                  - heading "운동하기" [level=3] [ref=e115]
+                  - generic [ref=e117]:
+                    - generic "IN_PROGRESS" [ref=e118]: 🔄
+                    - generic [ref=e119]: 진행
+                - paragraph [ref=e120]: 헬스장에서 운동
+                - generic [ref=e122]:
+                  - generic [ref=e123]:
+                    - generic [ref=e124]: 🏥
+                    - text: 건강
+                  - generic [ref=e125]: ⏱ 1h 30m
+                - generic [ref=e126]:
+                  - generic [ref=e127]: "#건강"
+                  - generic [ref=e128]: "#루틴"
+            - generic [ref=e129]:
+              - generic [ref=e130]: "3"
+              - generic [ref=e131] [cursor=pointer]:
+                - generic [ref=e134] [cursor=pointer]:
+                  - heading "TypeScript 공부" [level=3] [ref=e137] [cursor=pointer]
+                  - generic [ref=e138] [cursor=pointer]:
+                    - generic [ref=e139] [cursor=pointer]:
+                      - generic "SCHEDULED" [ref=e140] [cursor=pointer]: 📅
+                      - generic [ref=e141] [cursor=pointer]: 예정
+                    - img [ref=e143]
+                - paragraph [ref=e145] [cursor=pointer]: 고급 TypeScript 패턴 학습
+                - generic [ref=e147] [cursor=pointer]:
+                  - generic [ref=e148] [cursor=pointer]:
+                    - generic [ref=e149] [cursor=pointer]: 📚
+                    - text: 학습
+                  - generic [ref=e150] [cursor=pointer]: ⏱ 2h
+                - generic [ref=e151] [cursor=pointer]:
+                  - generic [ref=e152] [cursor=pointer]: "#개발"
+                  - generic [ref=e153] [cursor=pointer]: "#학습"
+            - generic [ref=e154]:
+              - generic [ref=e155]: "4"
+              - generic [ref=e156] [cursor=pointer]:
+                - generic [ref=e159] [cursor=pointer]:
+                  - heading "개인 프로젝트" [level=3] [ref=e162] [cursor=pointer]
+                  - generic [ref=e163] [cursor=pointer]:
+                    - generic [ref=e164] [cursor=pointer]:
+                      - generic "WAITING" [ref=e165] [cursor=pointer]: ⏳
+                      - generic [ref=e166] [cursor=pointer]: 대기
+                    - img [ref=e168]
+                - paragraph [ref=e170] [cursor=pointer]: 사이드 프로젝트 개발
+                - generic [ref=e172] [cursor=pointer]:
+                  - generic [ref=e173] [cursor=pointer]:
+                    - generic [ref=e174] [cursor=pointer]: 👤
+                    - text: 개인
+                  - generic [ref=e175] [cursor=pointer]: ⏱ 2h 30m
+                - generic [ref=e176] [cursor=pointer]:
+                  - generic [ref=e177] [cursor=pointer]: "#개발"
+                  - generic [ref=e178] [cursor=pointer]: "#사이드"
+            - generic [ref=e179]:
+              - generic [ref=e180]: "5"
+              - generic [ref=e181] [cursor=pointer]:
+                - generic [ref=e184] [cursor=pointer]:
+                  - heading "영어 스터디" [level=3] [ref=e187] [cursor=pointer]
+                  - generic [ref=e188] [cursor=pointer]:
+                    - generic [ref=e189] [cursor=pointer]:
+                      - generic "SCHEDULED" [ref=e190] [cursor=pointer]: 📅
+                      - generic [ref=e191] [cursor=pointer]: 예정
+                    - img [ref=e193]
+                - paragraph [ref=e195] [cursor=pointer]: 온라인 영어 회화 수업
+                - generic [ref=e197] [cursor=pointer]:
+                  - generic [ref=e198] [cursor=pointer]:
+                    - generic [ref=e199] [cursor=pointer]: 📚
+                    - text: 학습
+                  - generic [ref=e200] [cursor=pointer]: ⏱ 1h
+                - generic [ref=e201] [cursor=pointer]:
+                  - generic [ref=e202] [cursor=pointer]: "#영어"
+                  - generic [ref=e203] [cursor=pointer]: "#회화"
+                  - generic [ref=e204] [cursor=pointer]: "#온라인"
+            - generic [ref=e205]:
+              - generic [ref=e206]: "6"
+              - generic [ref=e207] [cursor=pointer]:
+                - generic [ref=e210] [cursor=pointer]:
+                  - heading "나의 첫 번째 할 일" [level=3] [ref=e213] [cursor=pointer]
+                  - generic [ref=e214] [cursor=pointer]:
+                    - generic [ref=e215] [cursor=pointer]:
+                      - generic "WAITING" [ref=e216] [cursor=pointer]: ⏳
+                      - generic [ref=e217] [cursor=pointer]: 대기
+                    - img [ref=e219]
+                - generic [ref=e222] [cursor=pointer]:
+                  - generic [ref=e223] [cursor=pointer]:
+                    - generic [ref=e224] [cursor=pointer]: 👤
+                    - text: 개인
+                  - generic [ref=e225] [cursor=pointer]: ⏱ 2h
+            - generic [ref=e226]:
+              - generic [ref=e227]: "7"
+              - generic [ref=e228] [cursor=pointer]:
+                - generic [ref=e231] [cursor=pointer]:
+                  - heading "프로젝트 미팅" [level=3] [ref=e234] [cursor=pointer]
+                  - generic [ref=e235] [cursor=pointer]:
+                    - generic [ref=e236] [cursor=pointer]:
+                      - generic "SCHEDULED" [ref=e237] [cursor=pointer]: 📅
+                      - generic [ref=e238] [cursor=pointer]: 예정
+                    - img [ref=e240]
+                - paragraph [ref=e242] [cursor=pointer]: 주간 프로젝트 진행 상황 리뷰
+                - generic [ref=e244] [cursor=pointer]:
+                  - generic [ref=e245] [cursor=pointer]:
+                    - generic [ref=e246] [cursor=pointer]: 💼
+                    - text: 업무
+                  - generic [ref=e247] [cursor=pointer]: ⏱ 1h
+                - generic [ref=e248] [cursor=pointer]:
+                  - generic [ref=e249] [cursor=pointer]: "#회의"
+                  - generic [ref=e250] [cursor=pointer]: "#프로젝트"
+            - generic [ref=e251]:
+              - generic [ref=e252]: "8"
+              - generic [ref=e253] [cursor=pointer]:
+                - generic [ref=e256] [cursor=pointer]:
+                  - heading "의료진 상담" [level=3] [ref=e259] [cursor=pointer]
+                  - generic [ref=e260] [cursor=pointer]:
+                    - generic [ref=e261] [cursor=pointer]:
+                      - generic "SCHEDULED" [ref=e262] [cursor=pointer]: 📅
+                      - generic [ref=e263] [cursor=pointer]: 예정
+                    - img [ref=e265]
+                - paragraph [ref=e267] [cursor=pointer]: 정기 건강 검진
+                - generic [ref=e269] [cursor=pointer]:
+                  - generic [ref=e270] [cursor=pointer]:
+                    - generic [ref=e271] [cursor=pointer]: 🏥
+                    - text: 건강
+                  - generic [ref=e272] [cursor=pointer]: ⏱ 45m
+                - generic [ref=e273] [cursor=pointer]:
+                  - generic [ref=e274] [cursor=pointer]: "#건강"
+                  - generic [ref=e275] [cursor=pointer]: "#검진"
+                - generic [ref=e276] [cursor=pointer]:
+                  - img [ref=e277] [cursor=pointer]
+                  - text: 12월 15일 오후 02:00
+            - generic [ref=e279]:
+              - generic [ref=e280]: "9"
+              - generic [ref=e281]:
+                - generic [ref=e284]:
+                  - heading "긴급 버그 수정" [level=3] [ref=e287]
+                  - generic [ref=e289]:
+                    - generic "IN_PROGRESS" [ref=e290]: 🔄
+                    - generic [ref=e291]: 진행
+                - paragraph [ref=e292]: 프로덕션 환경 긴급 버그 수정
+                - generic [ref=e294]:
+                  - generic [ref=e295]:
+                    - generic [ref=e296]: 💼
+                    - text: 업무
+                  - generic [ref=e297]: ⏱ 3h
+                - generic [ref=e298]:
+                  - generic [ref=e299]: "#버그"
+                  - generic [ref=e300]: "#긴급"
+            - generic [ref=e301]:
+              - generic [ref=e302]: "10"
+              - generic [ref=e303] [cursor=pointer]:
+                - generic [ref=e306] [cursor=pointer]:
+                  - heading "세금 신고" [level=3] [ref=e309] [cursor=pointer]
+                  - generic [ref=e310] [cursor=pointer]:
+                    - generic [ref=e311] [cursor=pointer]:
+                      - generic "WAITING" [ref=e312] [cursor=pointer]: ⏳
+                      - generic [ref=e313] [cursor=pointer]: 대기
+                    - img [ref=e315]
+                - paragraph [ref=e317] [cursor=pointer]: 연말정산 서류 준비
+                - generic [ref=e319] [cursor=pointer]:
+                  - generic [ref=e320] [cursor=pointer]:
+                    - generic [ref=e321] [cursor=pointer]: 👤
+                    - text: 개인
+                  - generic [ref=e322] [cursor=pointer]: ⏱ 2h
+                - generic [ref=e323] [cursor=pointer]:
+                  - generic [ref=e324] [cursor=pointer]: "#세금"
+                  - generic [ref=e325] [cursor=pointer]: "#서류"
+                  - generic [ref=e326] [cursor=pointer]: "#마감"
+                - generic [ref=e327] [cursor=pointer]:
+                  - img [ref=e328] [cursor=pointer]
+                  - text: 12월 20일 오후 06:00
+        - generic [ref=e333]: "마지막 업데이트: 9월 14일 오후 10:36"
+      - generic [ref=e335]:
+        - generic [ref=e336]:
+          - generic [ref=e337]:
+            - generic [ref=e338]:
+              - heading "9월 8일 - 14일" [level=2] [ref=e339]
+              - generic [ref=e340]:
+                - button "이전 주" [ref=e341] [cursor=pointer]:
+                  - img [ref=e342] [cursor=pointer]
+                - button "다음 주" [ref=e344] [cursor=pointer]:
+                  - img [ref=e345] [cursor=pointer]
+            - button "오늘" [ref=e347] [cursor=pointer]
+          - generic [ref=e348]:
+            - generic [ref=e351]:
+              - generic [ref=e352]: 월
+              - generic [ref=e353]: "8"
+            - generic [ref=e355]:
+              - generic [ref=e356]: 화
+              - generic [ref=e357]: "9"
+            - generic [ref=e359]:
+              - generic [ref=e360]: 수
+              - generic [ref=e361]: "10"
+            - generic [ref=e363]:
+              - generic [ref=e364]: 목
+              - generic [ref=e365]: "11"
+            - generic [ref=e367]:
+              - generic [ref=e368]: 금
+              - generic [ref=e369]: "12"
+            - generic [ref=e371]:
+              - generic [ref=e372]: 토
+              - generic [ref=e373]: "13"
+            - generic [ref=e375]:
+              - generic [ref=e376]: 일
+              - generic [ref=e377]: "14"
+        - generic [ref=e379]:
+          - generic [ref=e380]:
+            - generic [ref=e383]: 10 AM
+            - generic [ref=e388]: 11 AM
+            - generic [ref=e392]: 12 PM
+            - generic [ref=e397]: 1 PM
+            - generic [ref=e401]: 2 PM
+            - generic [ref=e405]: 3 PM
+            - generic [ref=e409]: 4 PM
+            - generic [ref=e413]: 5 PM
+            - generic [ref=e417]: 6 PM
+            - generic [ref=e421]: 7 PM
+            - generic [ref=e426]: 8 PM
+          - generic [ref=e428]:
+            - generic [ref=e431]: 업무
+            - generic [ref=e434]: 점심
+  - alert [ref=e759]
+```

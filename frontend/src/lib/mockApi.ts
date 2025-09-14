@@ -249,24 +249,27 @@ const createApiResponse = <T>(
 export const todoApi = {
   // 모든 Todo 조회 (페이징, 필터링 지원)
   getTodos: async (
-    page: number = 1, 
-    size: number = 20, 
+    page: number = 1,
+    size: number = 20,
     filters?: FilterOptions
   ): Promise<PaginatedResponse<Todo>> => {
+    console.log('📋 mockApi.getTodos 호출됨 - page:', page, 'size:', size, 'filters:', filters);
     await delay();
-    
+
     // 네트워크 에러 시뮬레이션
     if (shouldSimulateNetworkError()) {
       throw createNetworkError('getTodos');
     }
-    
+
     // 특정 오퍼레이션 에러 시뮬레이션
     if (shouldSimulateError('getTodos')) {
       throw createOperationError('getTodos');
     }
-    
+
     try {
       let todos = storageUtils.getItem<Todo[]>(STORAGE_KEYS.TODOS, []);
+      console.log('📋 localStorage에서 읽어온 todos 개수:', todos.length);
+      console.log('📋 첫 번째 todo:', todos[0]);
       
       // 날짜 문자열을 Date 객체로 변환
       todos = todos.map(todo => ({
@@ -365,11 +368,13 @@ export const todoApi = {
 
   // Todo 생성
   createTodo: async (todoData: CreateTodoForm): Promise<ApiResponse<Todo>> => {
+    console.log('📝 mockApi.createTodo 시작, 입력 데이터:', todoData);
     await delay();
-    
+
     try {
       const todos = storageUtils.getItem<Todo[]>(STORAGE_KEYS.TODOS, []);
-      
+      console.log('📝 기존 localStorage todos:', todos.length, '개');
+
       const newTodo: Todo = {
         id: generateTodoId(),
         title: todoData.title.trim(),
@@ -385,11 +390,24 @@ export const todoApi = {
         userId: 'user-1' // Mock 사용자 ID
       };
 
-      todos.push(newTodo);
-      storageUtils.setItem(STORAGE_KEYS.TODOS, todos);
+      console.log('📝 생성된 새 할일:', newTodo);
 
-      return createApiResponse(newTodo, true, '새로운 할 일이 생성되었습니다.');
+      todos.push(newTodo);
+      console.log('📝 할일 추가 후 총 개수:', todos.length);
+
+      storageUtils.setItem(STORAGE_KEYS.TODOS, todos);
+      console.log('📝 localStorage 저장 완료');
+
+      // 저장 후 검증
+      const savedTodos = storageUtils.getItem<Todo[]>(STORAGE_KEYS.TODOS, []);
+      console.log('📝 저장 후 검증 - localStorage에서 다시 읽은 todos 개수:', savedTodos.length);
+
+      const response = createApiResponse(newTodo, true, '새로운 할 일이 생성되었습니다.');
+      console.log('📝 createTodo API 응답:', response);
+
+      return response;
     } catch (error) {
+      console.log('📝 createTodo 에러:', error);
       return createApiResponse<Todo>(null, false, 'Todo 생성 중 오류가 발생했습니다.');
     }
   },
