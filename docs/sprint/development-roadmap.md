@@ -135,7 +135,7 @@ Todo 관리 핵심 기능 구현 및 상태 관리 구축
 
 ### Backend 작업
 #### Todo API 완전 구현
-- [ ] S2.B.1 GET /api/v1/todos (목록 조회, 페이징, 필터링)
+- [x] S2.B.1 GET /api/v1/todos (목록 조회, 페이징, 필터링)
 - [ ] S2.B.2 GET /api/v1/todos/{id} (상세 조회)
 - [ ] S2.B.3 POST /api/v1/todos (생성)
 - [ ] S2.B.4 PUT /api/v1/todos/{id} (수정)

@@ -57,12 +57,19 @@ class TodoController(
             direction = Sort.Direction.DESC
         ) pageable: Pageable
     ): ResponseEntity<ApiResponse<PageResponse<TodoResponse>>> {
-        // TODO: Implement getTodos endpoint
-        // - 인증된 사용자 ID 추출
-        // - todoService.getTodos() 호출
-        // - Page<TodoResponse> → PageResponse<TodoResponse> 변환
-        // - ApiResponse 래핑하여 응답
-        throw NotImplementedError("getTodos endpoint not yet implemented")
+        // TODO: Spring Security 구현 후 실제 인증된 사용자 ID 추출
+        // SecurityContextHolder.getContext().authentication.name 등 사용 예정
+        val userId = "test-user" // 임시 하드코딩
+
+        val todosPage = todoService.getTodos(userId, status, category, priority, pageable)
+        val pageResponse = PageResponse.of(todosPage)
+
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = pageResponse,
+                message = "할일 목록이 성공적으로 조회되었습니다."
+            )
+        )
     }
 
     /**

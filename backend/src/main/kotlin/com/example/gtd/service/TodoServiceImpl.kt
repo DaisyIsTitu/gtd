@@ -27,10 +27,6 @@ class TodoServiceImpl(
 
     /**
      * 할일 목록 조회 (필터링 및 페이징 지원)
-     * TODO: Implement filtered todo list retrieval
-     * - 필터 조건에 따라 적절한 Repository 메서드 호출
-     * - Page<Todo> → Page<TodoResponse> 변환
-     * - 성능 최적화를 위한 쿼리 선택 로직
      */
     override fun getTodos(
         userId: String,
@@ -39,9 +35,17 @@ class TodoServiceImpl(
         priority: TodoPriority?,
         pageable: Pageable
     ): Page<TodoResponse> {
-        // TODO: Implement getTodos method
-        // Consider using todoRepository.findTodosWithFilters() for complex filtering
-        throw NotImplementedError("getTodos method not yet implemented")
+        // 복합 필터링을 지원하는 동적 쿼리를 사용
+        val todosPage = todoRepository.findTodosWithFilters(
+            userId = userId,
+            status = status,
+            category = category,
+            priority = priority,
+            pageable = pageable
+        )
+
+        // Page<Todo>를 Page<TodoResponse>로 변환
+        return todosPage.map { todo -> TodoResponse.from(todo) }
     }
 
     /**
