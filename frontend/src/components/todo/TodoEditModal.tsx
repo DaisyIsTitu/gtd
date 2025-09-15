@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Todo, TodoCategory, TodoPriority, TodoStatus, UpdateTodoForm } from '@/types';
-import { todoApi } from '@/lib/mockApi';
+// Removed todoApi import - using props instead for API calls
 
 interface TodoEditModalProps {
   todo: Todo | null;
@@ -148,34 +148,54 @@ export default function TodoEditModal({
   }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🚀 TodoEditModal handleSubmit 시작 - 이벤트 받음');
     e.preventDefault();
-    
-    if (!todo) return;
+
+    if (!todo) {
+      console.log('❌ TodoEditModal - todo가 없어서 리턴');
+      return;
+    }
 
     const validationError = validateForm();
     if (validationError) {
+      console.log('❌ TodoEditModal - 유효성 검사 실패:', validationError);
       setError(validationError);
       return;
     }
+
+    console.log('📝 TodoEditModal - 폼 데이터:', formData);
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await todoApi.updateTodo(todo.id, {
+      const updateData = {
         ...formData,
         title: formData.title!.trim(),
         description: formData.description?.trim(),
         tags: formData.tags || [],
-      });
+      };
 
-      if (response.success && response.data) {
-        onTodoUpdated?.(response.data);
+      console.log('📞 TodoEditModal - onTodoUpdated 호출 시작');
+      if (onTodoUpdated) {
+        // Create the updated todo object for the callback
+        const updatedTodo: Todo = {
+          ...todo,
+          ...updateData,
+          deadline: updateData.deadline ? new Date(updateData.deadline) : undefined,
+          updatedAt: new Date()
+        };
+        console.log('📞 TodoEditModal - 업데이트된 todo 객체:', updatedTodo);
+
+        await onTodoUpdated(updatedTodo);
+        console.log('✅ TodoEditModal - onTodoUpdated 호출 완료');
         onClose();
       } else {
-        setError(response.error?.message || '할 일 수정 중 오류가 발생했습니다.');
+        console.log('❌ TodoEditModal - onTodoUpdated prop이 없음');
+        setError('할 일 수정 기능이 연결되지 않았습니다.');
       }
     } catch (error) {
+      console.log('❌ TodoEditModal - 에러 발생:', error);
       setError('할 일 수정 중 오류가 발생했습니다.');
       console.error('Todo update error:', error);
     } finally {
@@ -184,21 +204,27 @@ export default function TodoEditModal({
   };
 
   const handleDelete = async () => {
-    if (!todo) return;
+    console.log('🗑️ TodoEditModal handleDelete 시작');
+    if (!todo) {
+      console.log('❌ TodoEditModal - todo가 없어서 리턴');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await todoApi.deleteTodo(todo.id);
-
-      if (response.success) {
-        onTodoDeleted?.(todo.id);
+      console.log('📞 TodoEditModal - onTodoDeleted 호출 시작');
+      if (onTodoDeleted) {
+        await onTodoDeleted(todo.id);
+        console.log('✅ TodoEditModal - onTodoDeleted 호출 완료');
         onClose();
       } else {
-        setError(response.error?.message || '할 일 삭제 중 오류가 발생했습니다.');
+        console.log('❌ TodoEditModal - onTodoDeleted prop이 없음');
+        setError('할 일 삭제 기능이 연결되지 않았습니다.');
       }
     } catch (error) {
+      console.log('❌ TodoEditModal - 삭제 에러 발생:', error);
       setError('할 일 삭제 중 오류가 발생했습니다.');
       console.error('Todo delete error:', error);
     } finally {
@@ -500,6 +526,7 @@ export default function TodoEditModal({
                 </button>
                 <button
                   type="submit"
+                  onClick={() => console.log('🔘 할 일 수정 버튼 클릭됨')}
                   disabled={isLoading}
                   className="inline-flex justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

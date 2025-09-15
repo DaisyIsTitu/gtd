@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { TodoCategory, TodoPriority, CreateTodoForm } from '@/types';
-import { todoApi } from '@/lib/mockApi';
 
 interface TodoAddModalProps {
   isOpen: boolean;
@@ -195,23 +194,34 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
 
   // 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🚀 TodoAddModal handleSubmit 시작 - 이벤트 받음');
     e.preventDefault();
-    
+
+    console.log('🔍 현재 formData:', formData);
+    console.log('🔍 validateForm 결과:', validateForm());
+    console.log('🔍 isLoading 상태:', isLoading);
+
     if (!validateForm() || isLoading) {
+      console.log('❌ 유효성 검사 실패 또는 로딩 중이므로 리턴');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const response = await todoApi.createTodo(formData);
-      
-      if (response.success && response.data) {
-        await onTodoCreated?.(formData);
+      console.log('🚀 TodoAddModal handleSubmit 시작, formData:', formData);
+      console.log('🔍 onTodoCreated 함수 존재:', !!onTodoCreated);
+
+      // onTodoCreated prop을 통해 store의 createTodo 함수 호출
+      if (onTodoCreated) {
+        console.log('📞 onTodoCreated 호출 시작');
+        await onTodoCreated(formData);
+        console.log('✅ onTodoCreated 호출 완료');
         onClose();
         // 성공 알림은 부모 컴포넌트에서 처리
       } else {
-        setErrors({ title: response.message || '할 일 생성에 실패했습니다.' });
+        console.log('❌ onTodoCreated 함수가 없음');
+        setErrors({ title: 'onTodoCreated 함수가 전달되지 않았습니다.' });
       }
     } catch (error) {
       console.error('할 일 생성 오류:', error);
@@ -488,6 +498,7 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
             </button>
             <button
               type="submit"
+              onClick={() => console.log('🔘 할 일 추가 버튼 클릭됨')}
               disabled={isLoading || !formData.title.trim()}
               className="px-6 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

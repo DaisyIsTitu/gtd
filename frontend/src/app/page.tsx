@@ -153,11 +153,18 @@ export default function HomePage() {
     }
   };
 
-  const handleTodoUpdated = (updatedTodo: any) => {
-    toast.success('할 일 수정 완료', `"${updatedTodo.title}"이(가) 수정되었습니다.`);
-    editModal.close();
-    // Refresh schedules as updated todos might affect display
-    fetchSchedules();
+  const handleTodoUpdated = async (updatedTodo: any) => {
+    console.log('📝 handleTodoUpdated 시작:', updatedTodo);
+    const success = await updateTodo(updatedTodo.id, updatedTodo);
+    if (success) {
+      console.log('✅ handleTodoUpdated - 업데이트 성공');
+      toast.success('할 일 수정 완료', `"${updatedTodo.title}"이(가) 수정되었습니다.`);
+      editModal.close();
+      // Refresh schedules as updated todos might affect display
+      fetchSchedules();
+    } else {
+      console.error('❌ handleTodoUpdated - 업데이트 실패');
+    }
   };
 
   const handleTodoDeleted = async (todoId: string) => {
