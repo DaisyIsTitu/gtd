@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   description: 'Google Calendar 연동 스마트 시간 관리 웹 애플리케이션',
   keywords: ['todo', 'timeblocking', 'calendar', 'productivity', 'scheduling'],
   authors: [{ name: 'GTD Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

@@ -45,51 +45,48 @@ export default function HomePage() {
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [playwrightTodos, setPlaywrightTodos] = useState<Todo[]>([]);
 
-  // 🎯 PLAYWRIGHT CRITICAL FIX: Store 데이터 실시간 동기화 폴링
-  // Playwright 환경에서 React 구독이 작동하지 않는 문제를 해결하기 위한 폴링 시스템
+  // 🎯 PLAYWRIGHT FIX: Store 데이터 동기화 (폴링 간격을 늘리고 조건 추가)
   useEffect(() => {
     let pollInterval: NodeJS.Timeout;
 
+    // 이미 데이터가 충분히 있으면 폴링하지 않음
+    if (playwrightTodos.length > 0) {
+      return;
+    }
+
     const startPolling = () => {
-      console.log('🤖 PLAYWRIGHT FIX: 실시간 store 동기화 폴링 시작');
+      console.log('🤖 PLAYWRIGHT FIX: 데이터 동기화 폴링 시작');
 
       pollInterval = setInterval(() => {
         try {
           const currentStore = useTodoStore.getState();
           const currentTodos = currentStore.todos || [];
 
-          // 데이터가 변경되었는지 확인 (길이와 첫 번째 요소로 비교)
-          const currentLength = currentTodos.length;
-          const currentFirst = currentTodos[0]?.id;
-          const previousLength = playwrightTodos.length;
-          const previousFirst = playwrightTodos[0]?.id;
-
-          if (currentLength !== previousLength || currentFirst !== previousFirst) {
+          // 데이터가 있고 이전과 다를 때만 업데이트
+          if (currentTodos.length > 0 && currentTodos.length !== playwrightTodos.length) {
             console.log('🤖 PLAYWRIGHT FIX: Store 데이터 변경 감지!');
-            console.log('🤖 이전:', previousLength, '개, 현재:', currentLength, '개');
-            console.log('🤖 이전 첫째:', previousFirst, ', 현재 첫째:', currentFirst);
-
-            // 로컬 상태 업데이트로 컴포넌트 재렌더링 강제 트리거
             setPlaywrightTodos([...currentTodos]);
             setRenderTrigger(prev => prev + 1);
+            // 데이터를 찾았으면 폴링 중지
+            clearInterval(pollInterval);
           }
         } catch (error) {
           console.error('🤖 PLAYWRIGHT FIX 폴링 에러:', error);
         }
-      }, 100); // 100ms마다 체크
+      }, 1000); // 1초로 간격 증가
     };
 
-    // 폴링 시작
-    startPolling();
+    // 약간의 지연 후 폴링 시작
+    const startTimeout = setTimeout(startPolling, 500);
 
-    // 정리 함수
     return () => {
+      clearTimeout(startTimeout);
       if (pollInterval) {
         clearInterval(pollInterval);
         console.log('🤖 PLAYWRIGHT FIX: 폴링 정리 완료');
       }
     };
-  }, [playwrightTodos]);
+  }, []); // playwrightTodos 의존성 제거로 무한 루프 방지
 
   // 🎯 데이터 변화 감지: storeTodos 길이 변화 시 강제 재렌더링
   useEffect(() => {
@@ -107,51 +104,7 @@ export default function HomePage() {
   console.log('🔍 HomePage: storeTodos 개수:', storeTodos?.length || 0);
   console.log('🔍 HomePage: playwrightTodos 개수:', playwrightTodos?.length || 0);
 
-  // 💡 DIRECT LOADING: 컴포넌트 렌더링 중 즉시 데이터 로딩 시도
-  // useEffect가 실행되지 않는 테스트 환경에서도 작동하도록 함
-  if (!dataLoaded && typeof fetchTodos === 'function') {
-    console.log('💡 DIRECT LOADING: 즉시 데이터 로딩 시작');
-    setDataLoaded(true);
-
-    // 🚀 NEW APPROACH: 재귀적 폴링 기반 데이터 로딩
-    // React 재렌더링에 의존하지 않고 지속적으로 데이터 상태 확인
-    const loadDataWithPolling = async () => {
-      console.log('💡 DIRECT LOADING: fetchTodos 호출');
-      await fetchTodos();
-      console.log('💡 DIRECT LOADING: fetchSchedules 호출');
-      await fetchSchedules();
-
-      // 📊 데이터 로딩 완료 후 지속적 상태 확인 (폴링)
-      const checkDataLoaded = () => {
-        const currentStore = useTodoStore.getState();
-        console.log('🔍 POLLING: 현재 store 상태 확인 - todos 개수:', currentStore.todos?.length || 0);
-
-        if (currentStore.todos && currentStore.todos.length > 0) {
-          console.log('🎉 POLLING: 데이터 로딩 성공! 재렌더링 강제 트리거');
-          // 다중 상태 변경으로 강제 재렌더링 보장
-          setRenderTrigger(prev => prev + 1);
-          setPlaywrightTodos([...currentStore.todos]); // Playwright 상태 동기화
-          setDataLoaded(false);
-          setTimeout(() => setDataLoaded(true), 10);
-          return true;
-        }
-        return false;
-      };
-
-      // 즉시 체크 + 최대 20회 재시도 (200ms 간격으로 증가)
-      if (!checkDataLoaded()) {
-        let retries = 0;
-        const pollInterval = setInterval(() => {
-          if (checkDataLoaded() || retries >= 20) {
-            clearInterval(pollInterval);
-          }
-          retries++;
-        }, 200);
-      }
-    };
-
-    loadDataWithPolling();
-  }
+  // 데이터 로딩은 useEffect에서만 처리 (중복 실행 방지)
 
   console.log('🔍 HomePage: renderTrigger:', renderTrigger);
   console.log('🔍 HomePage: storeTodos 개수:', storeTodos?.length || 0);
@@ -187,34 +140,17 @@ export default function HomePage() {
   // 🎯 AGGRESSIVE FALLBACK: 저장소 상태를 반복적으로 시도하는 최종 보강책
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
-  // 🚀 FINAL SOLUTION: 데이터가 없을 때 반복적으로 store 상태 확인 및 강제 업데이트
+  // 🎯 데이터 우선순위: storeTodos -> playwrightTodos -> filtered (강제 업데이트 제거)
   const directStoreTodos = useMemo(() => {
-    const storeData = getDirectStoreData();
-
-    // 🎯 CRITICAL FIX: playwrightTodos 우선 사용 (실시간 동기화된 데이터)
-    if (playwrightTodos && playwrightTodos.length > 0) {
-      console.log('🎯 BREAKTHROUGH: playwrightTodos에서 데이터 발견!', playwrightTodos.length, '개');
-      console.log('🎯 BREAKTHROUGH: 첫 번째 todo:', playwrightTodos[0]?.title);
-      return playwrightTodos;
-    }
-
-    // 🎯 storeTodos가 있으면 그것도 확인 (비동기 데이터 로딩 완료 감지)
-    if (!storeData && storeTodos && storeTodos.length > 0) {
-      console.log('🎯 BREAKTHROUGH: storeTodos에서 데이터 발견!', storeTodos.length, '개');
-      console.log('🎯 BREAKTHROUGH: 첫 번째 todo:', storeTodos[0]?.title);
+    // 단순히 사용 가능한 데이터 반환 (무한 루프 방지)
+    if (storeTodos && storeTodos.length > 0) {
       return storeTodos;
     }
-
-    // 데이터가 없지만 store에 데이터가 있을 가능성이 있다면 재시도
-    if (!storeData && forceUpdateCounter < 30) { // 시도 횟수 줄임
-      console.log('🔄 데이터 없음, 강제 업데이트 시도:', forceUpdateCounter);
-      setTimeout(() => {
-        setForceUpdateCounter(prev => prev + 1);
-      }, 300); // 간격 증가
+    if (playwrightTodos && playwrightTodos.length > 0) {
+      return playwrightTodos;
     }
-
-    return storeData;
-  }, [forceUpdateCounter, storeTodos, playwrightTodos]); // playwrightTodos 의존성 추가
+    return getDirectStoreData();
+  }, [storeTodos, playwrightTodos]); // forceUpdateCounter 의존성 제거
 
   // 🎯 MULTI-LEVEL FALLBACK: 여러 소스에서 데이터 확보 시도 (playwrightTodos 최우선)
   const todos = playwrightTodos?.length > 0 ? playwrightTodos : (directStoreTodos || storeTodos || filteredTodos || []);
@@ -398,10 +334,13 @@ export default function HomePage() {
     }
   };
 
+  // 자동배치 버튼 중복 클릭 방지를 위한 상태
+  const [isAutoScheduling, setIsAutoScheduling] = useState(false);
+
   const handleAutoSchedule = async () => {
-    // 이미 로딩 중이거나 미리보기 모드인 경우 중복 실행 방지
-    if (autoSchedule.loading || previewMode.isPreviewMode) {
-      console.log('🚨 자동 배치 중복 실행 방지 - 로딩:', autoSchedule.loading, '미리보기:', previewMode.isPreviewMode);
+    // 강화된 중복 실행 방지
+    if (isAutoScheduling || autoSchedule.loading || previewMode.isPreviewMode) {
+      console.log('🚨 자동 배치 중복 실행 방지 - isAutoScheduling:', isAutoScheduling, '로딩:', autoSchedule.loading, '미리보기:', previewMode.isPreviewMode);
       return;
     }
 
@@ -410,6 +349,8 @@ export default function HomePage() {
       return;
     }
 
+    // 실행 시작 플래그 설정
+    setIsAutoScheduling(true);
     console.log('🚀 자동 배치 시작 - waitingTodos:', waitingTodos.length);
 
     try {
@@ -427,6 +368,9 @@ export default function HomePage() {
     } catch (error) {
       console.error('🚨 Auto-scheduling failed:', error);
       toast.error('자동 배치 실패', error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      // 실행 완료 후 플래그 해제
+      setIsAutoScheduling(false);
     }
   };
 
@@ -528,9 +472,9 @@ export default function HomePage() {
             <div className="relative">
               <button
                 onClick={handleAutoSchedule}
-                disabled={autoSchedule.loading || previewMode.isPreviewMode || (!waitingTodos || waitingTodos.length === 0)}
+                disabled={isAutoScheduling || autoSchedule.loading || previewMode.isPreviewMode || (!waitingTodos || waitingTodos.length === 0)}
                 className={`auto-schedule-button inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${
-                  autoSchedule.loading
+                  (isAutoScheduling || autoSchedule.loading)
                     ? 'loading bg-green-500 text-white cursor-not-allowed'
                     : (previewMode.isPreviewMode)
                     ? 'bg-orange-400 text-white cursor-not-allowed'
@@ -539,7 +483,7 @@ export default function HomePage() {
                     : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md focus:ring-green-500'
                 }`}
               >
-                {autoSchedule.loading ? (
+                {(isAutoScheduling || autoSchedule.loading) ? (
                   <>
                     <div className="relative w-4 h-4 mr-2">
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -569,7 +513,7 @@ export default function HomePage() {
               </button>
 
               {/* Enhanced Progress Bar - 로딩 중일 때만 표시 */}
-              {autoSchedule.loading && (
+              {(isAutoScheduling || autoSchedule.loading) && (
                 <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-green-100 rounded-full overflow-hidden">
                   <div className="h-full progress-bar-enhanced rounded-full">
                   </div>
@@ -621,7 +565,7 @@ export default function HomePage() {
           onDragStart={handleTodoDragStart}
           onAddTodo={addModal.open}
           onAutoSchedule={handleAutoSchedule}
-          autoScheduleLoading={autoSchedule.loading}
+          autoScheduleLoading={isAutoScheduling || autoSchedule.loading}
         />
 
         {/* 캘린더 영역 */}
