@@ -18,16 +18,21 @@ interface TodoListProps {
   isLoading?: boolean;
 }
 
-export default function TodoList({ 
-  todos, 
-  filters, 
+export default function TodoList({
+  todos,
+  filters,
   sortOption,
-  onTodoClick, 
-  onDragStart, 
-  error, 
-  onRetry, 
-  isLoading 
+  onTodoClick,
+  onDragStart,
+  error,
+  onRetry,
+  isLoading
 }: TodoListProps) {
+  console.log('🎯 TodoList 컴포넌트 렌더링됨!');
+  console.log('📊 받은 sortOption:', sortOption);
+  console.log('📋 받은 todos 수:', todos?.length || 0);
+  console.log('🔍 받은 todos 첫 3개:', todos?.slice(0, 3).map(t => `${t.title}(${t.priority})`) || 'none');
+  console.log('🔍 받은 todos 첫 번째 정확히:', todos?.[0] || 'undefined');
   // 필터링된 Todo 목록
   const filteredTodos = useMemo(() => {
     if (!todos || !Array.isArray(todos)) return [];
@@ -65,72 +70,78 @@ export default function TodoList({
 
   // 정렬된 Todo 목록
   const sortedTodos = useMemo(() => {
-    if (!sortOption) {
-      // 기본 정렬: 우선순위 > 상태 > 생성일
-      const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-      const statusOrder = {
-        IN_PROGRESS: 0,
-        SCHEDULED: 1,
-        WAITING: 2,
-        MISSED: 3,
-        COMPLETED: 4,
-        CANCELLED: 5,
-      };
-      
-      return [...filteredTodos].sort((a, b) => {
-        // 1차: 우선순위 순서
-        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-        if (priorityDiff !== 0) return priorityDiff;
-        
-        // 2차: 상태 순서
-        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
-        if (statusDiff !== 0) return statusDiff;
-        
-        // 3차: 생성일 (최신순)
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-    }
+    console.log('🔄 TodoList 정렬 시작');
+    console.log('📊 sortOption=', JSON.stringify(sortOption, null, 2));
+    console.log('📋 filteredTodos.length=', filteredTodos.length);
+    console.log('📝 filteredTodos titles:', filteredTodos.map(t => `${t.title}(${t.priority})`));
 
-    // 커스텀 정렬
-    return [...filteredTodos].sort((a, b) => {
+    // 🚨 CRITICAL DEBUG: 정렬 로직 실행 여부 확인
+    console.log('🚨 CRITICAL: useMemo sorting logic EXECUTING');
+
+    // ⚠️ FIX: 조건을 단순화하고 항상 sortOption 처리하도록 개선
+    // 기본값이 있으므로 sortOption이 없는 경우는 거의 없음
+    const currentSortOption = sortOption || {
+      field: 'priority' as const,
+      direction: 'desc' as const,
+      value: 'priority-desc',
+      label: '우선순위 ↓'
+    };
+
+    console.log('🚨 CRITICAL: currentSortOption=', currentSortOption);
+
+    console.log('🎯 TodoList: Using sort -', currentSortOption.field, currentSortOption.direction);
+    console.log('🔧 TodoList: Before sorting - first 3 todos:', filteredTodos.slice(0, 3).map(t => `${t.title}(${t.priority})`));
+    // 정렬 처리
+    const sorted = [...filteredTodos].sort((a, b) => {
       let comparison = 0;
 
-      switch (sortOption.field) {
+      switch (currentSortOption.field) {
         case 'priority':
           const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
           comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+          console.log(`🔢 Priority comparison: ${a.title}(${a.priority}=${priorityOrder[a.priority]}) vs ${b.title}(${b.priority}=${priorityOrder[b.priority]}) = ${comparison}`);
           break;
-        
+
         case 'deadline':
           // 마감일이 없는 경우 처리
           const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity;
           const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity;
           comparison = aDeadline - bDeadline;
+          console.log(`📅 Deadline comparison: ${a.title}(${aDeadline}) vs ${b.title}(${bDeadline}) = ${comparison}`);
           break;
-        
+
         case 'createdAt':
-          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          const aCreated = new Date(a.createdAt).getTime();
+          const bCreated = new Date(b.createdAt).getTime();
+          comparison = aCreated - bCreated;
+          console.log(`🕒 CreatedAt comparison: ${a.title}(${a.createdAt}) vs ${b.title}(${b.createdAt}) = ${comparison}`);
           break;
-        
+
         case 'updatedAt':
           comparison = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
           break;
-        
+
         case 'title':
           comparison = a.title.localeCompare(b.title, 'ko-KR');
+          console.log(`🔤 Title comparison: ${a.title} vs ${b.title} = ${comparison}`);
           break;
-        
+
         case 'duration':
           comparison = a.duration - b.duration;
           break;
-        
+
         default:
           comparison = 0;
       }
 
       // 내림차순인 경우 결과 반전
-      return sortOption.direction === 'desc' ? -comparison : comparison;
+      const result = currentSortOption.direction === 'desc' ? -comparison : comparison;
+      console.log(`⚡ Final result (${currentSortOption.direction}): ${result}`);
+      return result;
     });
+
+    console.log('✅ Sorted results:', sorted.map(t => `${t.title}(${t.priority})`));
+    return sorted;
   }, [filteredTodos, sortOption]);
 
   // 상태별로 그룹화 (정렬이 우선순위/상태 기반이 아닐 때만 사용)
@@ -185,7 +196,7 @@ export default function TodoList({
       return { active: activeCount, total: sortedTodos.length };
     }
 
-    const activeCount = (groupedTodos.active?.length || 0) + (groupedTodos.scheduled?.length || 0) + (groupedTodos.waiting?.length || 0);
+    const activeCount = ('active' in groupedTodos ? (groupedTodos.active?.length || 0) + (groupedTodos.scheduled?.length || 0) + (groupedTodos.waiting?.length || 0) : 0);
     return { active: activeCount, total: sortedTodos.length };
   };
 
@@ -270,7 +281,7 @@ export default function TodoList({
 
       {/* Todo 목록 */}
       <div className="px-4 space-y-2">
-        {shouldGroupByStatus ? (
+        {shouldGroupByStatus && 'active' in groupedTodos ? (
           // 상태별 그룹화된 표시
           <>
             {renderTodoGroup('진행 중', groupedTodos.active, 'bg-yellow-500', '🔄')}
@@ -283,7 +294,7 @@ export default function TodoList({
         ) : (
           // 정렬 우선시 - 단순 목록
           <div className="space-y-2">
-            {groupedTodos.all.map((todo, index) => (
+            {'all' in groupedTodos ? groupedTodos.all.map((todo, index) => (
               <div key={todo.id} className="relative">
                 {/* 정렬 순서 표시 (선택사항) */}
                 {sortOption && ['deadline', 'priority'].includes(sortOption.field) && (
@@ -297,7 +308,7 @@ export default function TodoList({
                   onDragStart={onDragStart}
                 />
               </div>
-            ))}
+            )) : null}
           </div>
         )}
       </div>

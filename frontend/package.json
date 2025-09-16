@@ -4,7 +4,7 @@
   "private": true,
   "description": "Todo Time-blocking 앱 - Google Calendar 연동 스마트 시간 관리 웹 애플리케이션",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3005",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

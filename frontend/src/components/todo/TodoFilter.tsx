@@ -127,7 +127,10 @@ export default function TodoFilter({
           <div className="flex items-center space-x-3">
             <h3 className="text-sm font-semibold text-gray-700">필터 & 정렬</h3>
             {hasActiveFilters && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span
+                data-testid="active-filters-count"
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
                 {getActiveFiltersCount()}개 필터 활성
               </span>
             )}
@@ -135,6 +138,7 @@ export default function TodoFilter({
           <div className="flex items-center space-x-2">
             {hasActiveFilters && (
               <button
+                data-testid="clear-all-filters"
                 onClick={handleClearAll}
                 className="text-xs text-gray-500 hover:text-gray-700 underline"
               >
@@ -142,6 +146,7 @@ export default function TodoFilter({
               </button>
             )}
             <button
+              data-testid="filter-expand-button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-gray-500 hover:text-gray-700 p-1 rounded-md hover:bg-gray-50"
             >
@@ -162,10 +167,11 @@ export default function TodoFilter({
 
         {/* 확장된 옵션 */}
         {isExpanded && (
-          <div className="space-y-4">
+          <div data-testid="filter-panel" className="space-y-4">
             {/* 탭 */}
             <div className="flex border-b border-gray-200">
               <button
+                data-testid="filters-tab"
                 onClick={() => setActiveTab('filters')}
                 className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'filters'
@@ -176,6 +182,7 @@ export default function TodoFilter({
                 필터
               </button>
               <button
+                data-testid="sort-tab"
                 onClick={() => setActiveTab('sort')}
                 className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'sort'
@@ -189,7 +196,7 @@ export default function TodoFilter({
 
             {/* 필터 탭 */}
             {activeTab === 'filters' && (
-              <div className="space-y-4">
+              <div data-testid="filter-content" className="space-y-4">
 
                 {/* 상태 필터 */}
                 <div>
@@ -198,6 +205,7 @@ export default function TodoFilter({
                     {STATUS_OPTIONS.map(({ value, label, color, icon }) => (
                       <button
                         key={value}
+                        data-testid={`status-filter-${value}`}
                         onClick={() => handleStatusToggle(value)}
                         className={`flex items-center px-2 py-1.5 rounded text-xs font-medium transition-colors ${
                           filters.statuses.includes(value)
@@ -219,6 +227,7 @@ export default function TodoFilter({
                     {CATEGORY_OPTIONS.map(({ value, label, color, icon }) => (
                       <button
                         key={value}
+                        data-testid={`category-filter-${value}`}
                         onClick={() => handleCategoryToggle(value)}
                         className={`flex items-center px-2 py-1.5 rounded text-xs font-medium transition-colors ${
                           filters.categories.includes(value)
@@ -240,6 +249,7 @@ export default function TodoFilter({
                     {PRIORITY_OPTIONS.map(({ value, label, color, icon }) => (
                       <button
                         key={value}
+                        data-testid={`priority-filter-${value}`}
                         onClick={() => handlePriorityToggle(value)}
                         className={`flex items-center px-2 py-1.5 rounded text-xs font-medium border transition-colors ${
                           filters.priorities.includes(value)
@@ -258,14 +268,18 @@ export default function TodoFilter({
 
             {/* 정렬 탭 */}
             {activeTab === 'sort' && (
-              <div className="space-y-4">
+              <div data-testid="sort-content" className="space-y-4">
                 <div>
                   <h4 className="text-xs font-medium text-gray-600 mb-2">정렬 기준</h4>
                   <div className="space-y-1">
                     {SORT_OPTIONS.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => onSortChange?.(option)}
+                        data-testid={`sort-option-${option.value}`}
+                        onClick={() => {
+                          console.log('🎯 TodoFilter 정렬 옵션 클릭됨:', option);
+                          onSortChange?.(option);
+                        }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                           sortOption.value === option.value
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'

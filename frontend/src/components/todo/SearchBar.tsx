@@ -135,6 +135,7 @@ export default function SearchBar({
 
           {/* 입력 필드 */}
           <input
+            data-testid="search-input"
             type="text"
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -175,7 +176,7 @@ export default function SearchBar({
             </span>
             {searchResults.length > 0 && (
               <span className="text-gray-400">
-                "{searchTerm}" 검색
+                &quot;{searchTerm}&quot; 검색
               </span>
             )}
           </div>
@@ -188,7 +189,7 @@ export default function SearchBar({
           <div className="mb-1">💡 검색 팁:</div>
           <div className="space-y-0.5 pl-2">
             <div>• 제목, 설명, 태그로 검색 가능</div>
-            <div>• "업무", "개인", "긴급" 등 한국어 검색 지원</div>
+            <div>• &quot;업무&quot;, &quot;개인&quot;, &quot;긴급&quot; 등 한국어 검색 지원</div>
             <div>• ESC키로 검색 초기화</div>
           </div>
         </div>
