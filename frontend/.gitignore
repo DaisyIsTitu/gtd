@@ -118,3 +118,8 @@ storybook-static
 # Temporary folders
 tmp/
 temp/
+
+# Playwright test results
+/test-results/
+/playwright-report/
+/playwright/.cache/

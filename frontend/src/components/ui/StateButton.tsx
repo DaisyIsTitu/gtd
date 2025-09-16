@@ -83,7 +83,7 @@ export default function StateButton({
           key={transition.to}
           onClick={(e) => {
             e.stopPropagation(); // 부모 클릭 이벤트 방지
-            handleTransition(transition.to);
+            handleTransition(transition.to as TodoStatus);
           }}
           disabled={loading}
           className={`

@@ -53,6 +53,9 @@ export interface TodoSchedule {
   };
   status: ScheduleStatus;
   createdAt: Date;
+  // Preview mode properties
+  isPreviewNew?: boolean;
+  isPreviewExisting?: boolean;
 }
 
 export interface CalendarEvent {

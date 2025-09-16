@@ -107,6 +107,7 @@ export default function TodoItem({ todo, onTodoClick, onDragStart }: TodoItemPro
 
   return (
     <div
+      data-testid="todo-item"
       className={`group relative rounded-lg border p-3 transition-all duration-300 hover:scale-[1.02] ${
         statusStyle.bg
       } ${statusStyle.border} ${statusStyle.glow} ${

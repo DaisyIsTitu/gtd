@@ -57,7 +57,7 @@ interface TodoState {
 const initialFilters: FilterOptions = {
   categories: [],
   priorities: [],
-  statuses: ['WAITING', 'SCHEDULED', 'IN_PROGRESS'], // 기본적으로 활성 상태만 표시
+  statuses: [], // E2E 테스트를 위해 모든 상태 표시 (기본 필터 해제)
   tags: [],
 };
 
@@ -167,8 +167,10 @@ export const useTodoStore = create<TodoState>()(
         // API Actions
         fetchTodos: async () => {
           console.log('🔍 fetchTodos 호출 시작');
+          console.log('🔍 todoApi 객체 확인:', typeof todoApi, !!todoApi);
+          console.log('🔍 todoApi.getTodos 함수 확인:', typeof todoApi?.getTodos, !!todoApi?.getTodos);
           set({ loading: true, error: null }, false, 'fetchTodos:start');
-          
+
           try {
             console.log('🔍 todoApi.getTodos 호출 중...');
             const response = await todoApi.getTodos(1, 100); // Get all todos
