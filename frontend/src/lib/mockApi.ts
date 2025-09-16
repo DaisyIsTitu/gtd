@@ -84,23 +84,38 @@ export const storageUtils = {
         }
         return defaultValue;
       }
-      
+
       const item = localStorage.getItem(key);
-      if (item === null) {
+      if (item === null || item === 'undefined') {
+        console.log(`📋 localStorage에 ${key} 데이터 없음, 기본 Mock 데이터로 초기화`);
         // 초기 데이터가 없으면 기본 Mock 데이터로 초기화
         if (key === STORAGE_KEYS.TODOS) {
+          console.log('📋 mockTodos로 초기화:', mockTodos.length, '개');
           storageUtils.setItem(key, mockTodos);
           return mockTodos as T;
         }
         if (key === STORAGE_KEYS.SCHEDULES) {
+          console.log('📋 mockSchedules로 초기화:', mockSchedules.length, '개');
           storageUtils.setItem(key, mockSchedules);
           return mockSchedules as T;
         }
         return defaultValue;
       }
-      return JSON.parse(item) as T;
+
+      const parsed = JSON.parse(item) as T;
+      console.log(`📋 localStorage에서 ${key} 읽기 성공:`, Array.isArray(parsed) ? `${parsed.length}개` : typeof parsed);
+      return parsed;
     } catch (error) {
       console.error('localStorage 읽기 오류:', error);
+      // 오류 발생 시에도 기본 Mock 데이터 반환
+      if (key === STORAGE_KEYS.TODOS) {
+        console.log('📋 오류로 인한 mockTodos 사용:', mockTodos.length, '개');
+        return mockTodos as T;
+      }
+      if (key === STORAGE_KEYS.SCHEDULES) {
+        console.log('📋 오류로 인한 mockSchedules 사용:', mockSchedules.length, '개');
+        return mockSchedules as T;
+      }
       return defaultValue;
     }
   },

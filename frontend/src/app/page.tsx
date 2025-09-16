@@ -41,73 +41,16 @@ export default function HomePage() {
   const storeLoading = useTodoStore(state => state.loading);
   const storeError = useTodoStore(state => state.error);
 
-  // 🚀 추가 재렌더링 트리거: 데이터 카운트 변화 감지
-  const [renderTrigger, setRenderTrigger] = useState(0);
-  const [playwrightTodos, setPlaywrightTodos] = useState<Todo[]>([]);
-
-  // 🎯 PLAYWRIGHT FIX: Store 데이터 동기화 (폴링 간격을 늘리고 조건 추가)
-  useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
-
-    // 이미 데이터가 충분히 있으면 폴링하지 않음
-    if (playwrightTodos.length > 0) {
-      return;
-    }
-
-    const startPolling = () => {
-      console.log('🤖 PLAYWRIGHT FIX: 데이터 동기화 폴링 시작');
-
-      pollInterval = setInterval(() => {
-        try {
-          const currentStore = useTodoStore.getState();
-          const currentTodos = currentStore.todos || [];
-
-          // 데이터가 있고 이전과 다를 때만 업데이트
-          if (currentTodos.length > 0 && currentTodos.length !== playwrightTodos.length) {
-            console.log('🤖 PLAYWRIGHT FIX: Store 데이터 변경 감지!');
-            setPlaywrightTodos([...currentTodos]);
-            setRenderTrigger(prev => prev + 1);
-            // 데이터를 찾았으면 폴링 중지
-            clearInterval(pollInterval);
-          }
-        } catch (error) {
-          console.error('🤖 PLAYWRIGHT FIX 폴링 에러:', error);
-        }
-      }, 1000); // 1초로 간격 증가
-    };
-
-    // 약간의 지연 후 폴링 시작
-    const startTimeout = setTimeout(startPolling, 500);
-
-    return () => {
-      clearTimeout(startTimeout);
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        console.log('🤖 PLAYWRIGHT FIX: 폴링 정리 완료');
-      }
-    };
-  }, []); // playwrightTodos 의존성 제거로 무한 루프 방지
-
-  // 🎯 데이터 변화 감지: storeTodos 길이 변화 시 강제 재렌더링
-  useEffect(() => {
-    if (storeTodos && storeTodos.length > 0) {
-      console.log('🚀 storeTodos 변화 감지! 강제 재렌더링:', storeTodos.length);
-      setRenderTrigger(prev => prev + 1);
-      setPlaywrightTodos([...storeTodos]); // Playwright 상태도 동기화
-    }
-  }, [storeTodos]);
+  // 데이터 로딩은 useEffect에서만 처리 (중복 실행 방지)
 
   console.log('🚀 HomePage 컴포넌트 렌더링, mounted:', mounted, ', isClient:', isClient, ', dataLoaded:', dataLoaded);
   console.log('🚀 fetchTodos 함수 타입:', typeof fetchTodos);
   console.log('🚀 fetchSchedules 함수 타입:', typeof fetchSchedules);
   console.log('🚀 window 존재 여부:', typeof window !== 'undefined');
   console.log('🔍 HomePage: storeTodos 개수:', storeTodos?.length || 0);
-  console.log('🔍 HomePage: playwrightTodos 개수:', playwrightTodos?.length || 0);
+  console.log('🔍 HomePage: storeTodos 직접 사용 - 무한루프 수정 완료');
 
   // 데이터 로딩은 useEffect에서만 처리 (중복 실행 방지)
-
-  console.log('🔍 HomePage: renderTrigger:', renderTrigger);
-  console.log('🔍 HomePage: storeTodos 개수:', storeTodos?.length || 0);
 
   // 🚀 CRITICAL FIX: 스토어 데이터를 직접 사용하고 필터링은 컴포넌트 내부에서 처리
   // useFilteredTodos 훅이 작동하지 않는 문제 우회
@@ -137,26 +80,19 @@ export default function HomePage() {
     return null;
   };
 
-  // 🎯 AGGRESSIVE FALLBACK: 저장소 상태를 반복적으로 시도하는 최종 보강책
-  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
-
-  // 🎯 데이터 우선순위: storeTodos -> playwrightTodos -> filtered (강제 업데이트 제거)
+  // 🎯 데이터 소스 단순화: storeTodos와 filteredTodos만 사용 (무한 루프 방지)
   const directStoreTodos = useMemo(() => {
     // 단순히 사용 가능한 데이터 반환 (무한 루프 방지)
     if (storeTodos && storeTodos.length > 0) {
       return storeTodos;
     }
-    if (playwrightTodos && playwrightTodos.length > 0) {
-      return playwrightTodos;
-    }
     return getDirectStoreData();
-  }, [storeTodos, playwrightTodos]); // forceUpdateCounter 의존성 제거
+  }, [storeTodos]);
 
-  // 🎯 MULTI-LEVEL FALLBACK: 여러 소스에서 데이터 확보 시도 (playwrightTodos 최우선)
-  const todos = playwrightTodos?.length > 0 ? playwrightTodos : (directStoreTodos || storeTodos || filteredTodos || []);
+  // 🎯 SIMPLIFIED FALLBACK: storeTodos 우선, filteredTodos는 fallback
+  const todos = directStoreTodos || storeTodos || filteredTodos || [];
 
-  console.log('🔍 HomePage: FINAL todos value (다중 소스 우선순위 적용):');
-  console.log('🔍 - playwrightTodos 개수:', playwrightTodos?.length || 0);
+  console.log('🔍 HomePage: FINAL todos value (단순화된 소스):');
   console.log('🔍 - directStoreTodos 개수:', directStoreTodos?.length || 0);
   console.log('🔍 - storeTodos 개수:', storeTodos?.length || 0);
   console.log('🔍 - filteredTodos 개수:', filteredTodos?.length || 0);
@@ -191,13 +127,31 @@ export default function HomePage() {
     setIsClient(true);
     setMounted(true);
 
-    // Load data immediately in the same effect
-    console.log('🚀 즉시 데이터 로딩 시작');
-    console.log('🚀 fetchTodos 호출');
-    fetchTodos();
+    // Load data immediately in the same effect with slight delay for SSR compatibility
+    const loadData = async () => {
+      console.log('🚀 즉시 데이터 로딩 시작');
+      console.log('🚀 fetchTodos 호출');
+      await fetchTodos();
+      console.log('🚀 fetchTodos 완료');
 
-    console.log('🚀 fetchSchedules 호출');
-    fetchSchedules();
+      console.log('🚀 fetchSchedules 호출');
+      await fetchSchedules();
+      console.log('🚀 fetchSchedules 완료');
+      setDataLoaded(true);
+    };
+
+    // Execute immediately, but also ensure it runs after hydration
+    loadData();
+
+    // Fallback: also trigger after a small delay to ensure SSR/hydration compatibility
+    const fallbackTimer = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        console.log('🔄 Fallback 데이터 로딩 실행');
+        loadData();
+      }
+    }, 100);
+
+    return () => clearTimeout(fallbackTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
@@ -385,10 +339,8 @@ export default function HomePage() {
   const handlePreviewRetry = async () => {
     console.log('🔄 미리보기 재시도');
     previewMode.exitPreviewMode();
-    // Retry auto-scheduling
-    setTimeout(() => {
-      handleAutoSchedule();
-    }, 100);
+    // 자동 호출 제거 - 사용자가 직접 버튼을 클릭하도록 함
+    console.log('🔄 미리보기 모드 종료 완료. 사용자가 자동 배치 버튼을 다시 클릭해야 합니다.');
   };
 
   const handlePreviewCancel = () => {
@@ -570,7 +522,7 @@ export default function HomePage() {
 
         {/* 캘린더 영역 */}
         <div className="flex-1 p-2 md:p-4 calendar-scroll">
-          {loading ? (
+          {(loading || !dataLoaded) ? (
             <CalendarLoadingIndicator />
           ) : (
             <WeeklyCalendar
