@@ -174,13 +174,13 @@ export default function TodoList({
 
   const getTodoCount = () => {
     if (!shouldGroupByStatus) {
-      const activeCount = sortedTodos.filter(todo => 
-        ['IN_PROGRESS', 'SCHEDULED', 'WAITING'].includes(todo.status)
+      const activeCount = sortedTodos.filter(todo =>
+        ['IN_PROGRESS', 'SCHEDULED', 'WAITING', 'MISSED'].includes(todo.status)
       ).length;
       return { active: activeCount, total: sortedTodos.length };
     }
 
-    const activeCount = ('active' in groupedTodos ? (groupedTodos.active?.length || 0) + (groupedTodos.scheduled?.length || 0) + (groupedTodos.waiting?.length || 0) : 0);
+    const activeCount = ('active' in groupedTodos ? (groupedTodos.active?.length || 0) + (groupedTodos.scheduled?.length || 0) + (groupedTodos.waiting?.length || 0) + (groupedTodos.missed?.length || 0) : 0);
     return { active: activeCount, total: sortedTodos.length };
   };
 
