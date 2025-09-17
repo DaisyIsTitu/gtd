@@ -3,13 +3,13 @@ import { test, expect } from '@playwright/test';
 test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage before each test
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
   });
 
   test('S2.F.1: Todo 추가 모달 - 기본 기능', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 새 할 일 버튼 클릭
     await page.click('button:has-text("새 할 일")');
@@ -31,7 +31,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.1: Todo 추가 모달 - 정상 데이터 입력', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 새 할 일 버튼 클릭
     await page.click('button:has-text("새 할 일")');
@@ -60,7 +60,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.2: Todo 목록 표시 및 필터링', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 여러 할 일 추가
     const todos = [
@@ -99,7 +99,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.3: Todo 수정 기능', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 할 일 하나 추가
     await page.click('button:has-text("새 할 일")');
@@ -134,7 +134,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.3: Todo 삭제 기능', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 할 일 하나 추가
     await page.click('button:has-text("새 할 일")');
@@ -164,7 +164,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.4: 상태 관리 (데이터 지속성)', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 할 일 추가
     await page.click('button:has-text("새 할 일")');
@@ -193,7 +193,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('S2.F.4: 상태 관리 (반응성 테스트)', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 초기 상태 확인 - 할 일이 없어야 함
     const todoCount = await page.locator('[data-testid="todo-item"]').count();
@@ -214,7 +214,7 @@ test.describe('S2.F.1-S2.F.4: Todo Management Features', () => {
   });
 
   test('전체 워크플로우 통합 테스트', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3005');
 
     // 1. 여러 할 일 추가
     const todos = [
