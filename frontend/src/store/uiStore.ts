@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import React from 'react';
 import { Todo, CalendarView } from '@/types';
 
 interface UIState {
@@ -214,16 +215,28 @@ export const useUIStore = create<UIState>()(
           ...notificationData,
         };
 
-        set({ 
-          notifications: [...notifications, newNotification] 
+        // 중복 알림 방지
+        const isDuplicate = notifications.some(
+          n => n.title === newNotification.title &&
+          n.message === newNotification.message &&
+          n.type === newNotification.type &&
+          Date.now() - n.timestamp.getTime() < 1000 // 1초 이내 중복 방지
+        );
+
+        if (isDuplicate) {
+          return; // 중복 알림 무시
+        }
+
+        set({
+          notifications: [...notifications, newNotification]
         }, false, 'addNotification');
 
         // Auto-remove notification if it has a duration
         if (newNotification.duration) {
           setTimeout(() => {
             const currentNotifications = get().notifications;
-            set({ 
-              notifications: currentNotifications.filter(n => n.id !== newNotification.id) 
+            set({
+              notifications: currentNotifications.filter(n => n.id !== newNotification.id)
             }, false, 'autoRemoveNotification');
           }, newNotification.duration);
         }
@@ -296,7 +309,8 @@ export const useNotifications = () => useUIStore(state => ({
 export const useToast = () => {
   const addNotification = useUIStore(state => state.addNotification);
 
-  return {
+  // 메모이제이션된 토스트 함수들 - 무한 루프 방지
+  const toast = React.useMemo(() => ({
     success: (title: string, message?: string) => {
       addNotification({
         type: 'success',
@@ -325,5 +339,7 @@ export const useToast = () => {
         message: message || '',
       });
     },
-  };
+  }), [addNotification]);
+
+  return toast;
 };

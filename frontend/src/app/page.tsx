@@ -162,7 +162,7 @@ export default function HomePage() {
       toast.error('오류 발생', error);
       clearError();
     }
-  }, [error, toast, clearError]);
+  }, [error, clearError]); // toast 제거하여 무한 루프 방지
 
   // Handle auto-scheduling errors with toast notifications
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function HomePage() {
       toast.error('자동 배치 오류', autoSchedule.error);
       autoSchedule.clearError();
     }
-  }, [autoSchedule.error, toast, autoSchedule]);
+  }, [autoSchedule.error, autoSchedule]); // toast 제거하여 무한 루프 방지
 
   // Handle auto-scheduling success with toast notifications
   useEffect(() => {
@@ -181,7 +181,7 @@ export default function HomePage() {
         `${result.scheduledTodos?.length || 0}개의 할 일이 배치되었습니다.`
       );
     }
-  }, [autoSchedule.lastResult, toast]);
+  }, [autoSchedule.lastResult]); // toast 제거하여 무한 루프 방지
 
   // Create merged schedules for preview mode
   const getMergedSchedules = () => {
