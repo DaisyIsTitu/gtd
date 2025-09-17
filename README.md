@@ -114,6 +114,7 @@ gtd/
 ## 📚 문서
 
 - [📋 제품 요구사항 명세서 (PRD)](/docs/requirement/PRD.md)
+- [👤 사용자 스토리](/docs/requirement/user-stories.md)
 - [🏗 시스템 아키텍처](/docs/architecture/system-architecture.md)
 - [🔌 API 명세서](/docs/api/api-specification.md)
 - [🗄 데이터베이스 스키마](/docs/database/database-schema.md)
