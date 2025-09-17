@@ -9,6 +9,7 @@ import TodoAddModal from '@/components/todo/TodoAddModal';
 import TodoEditModal from '@/components/todo/TodoEditModal';
 import { CalendarLoadingIndicator } from '@/components/ui/CalendarSkeleton';
 import { TodoSchedule, Todo } from '@/types';
+import { mockTodos, mockSchedules } from '@/lib/mockData';
 import {
   useTodoStore,
   useFilteredTodos,
@@ -107,6 +108,29 @@ export default function HomePage() {
   // Toast notifications
   const toast = useToast();
 
+  // 🔥 CRITICAL EARLY FIX: localStorage 즉시 초기화 (Hydration 문제 해결)
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        // localStorage가 비어있으면 즉시 Mock 데이터로 채움
+        const todosItem = localStorage.getItem('gtd_todos');
+        const schedulesItem = localStorage.getItem('gtd_schedules');
+
+        if (!todosItem || todosItem === '[]' || todosItem === 'null') {
+          console.log('🔥 EARLY FIX: localStorage todos 즉시 초기화');
+          localStorage.setItem('gtd_todos', JSON.stringify(mockTodos));
+        }
+
+        if (!schedulesItem || schedulesItem === '[]' || schedulesItem === 'null') {
+          console.log('🔥 EARLY FIX: localStorage schedules 즉시 초기화');
+          localStorage.setItem('gtd_schedules', JSON.stringify(mockSchedules));
+        }
+      } catch (error) {
+        console.error('🔥 EARLY FIX 오류:', error);
+      }
+    }
+  }, []);
+
   // 단일 초기화 useEffect - 무한 로딩 문제 해결
   useEffect(() => {
     const initializeApp = async () => {
@@ -115,6 +139,9 @@ export default function HomePage() {
       }
 
       try {
+        // 🔥 EARLY FIX 후 100ms 대기 (localStorage 안정화)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // 데이터 로딩
         await Promise.all([
           fetchTodos(),
@@ -167,11 +194,11 @@ export default function HomePage() {
 
     initializeApp();
 
-    // 🚨 FAILSAFE: 3초 후에 강제로 로딩 완료 처리 (5초 → 3초로 단축)
+    // 🚨 FAILSAFE: 2초 후에 강제로 로딩 완료 처리 (3초 → 2초로 단축)
     const failsafeTimer = setTimeout(() => {
-      console.warn('⚠️ FAILSAFE: 3초 경과로 강제 초기화 완료 처리');
+      console.warn('⚠️ FAILSAFE: 2초 경과로 강제 초기화 완료 처리');
       setIsInitialized(true);
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(failsafeTimer);
   }, []); // 한 번만 실행

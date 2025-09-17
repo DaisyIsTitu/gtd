@@ -86,23 +86,41 @@ export const storageUtils = {
       }
 
       const item = localStorage.getItem(key);
-      if (item === null || item === 'undefined') {
-        console.log(`📋 localStorage에 ${key} 데이터 없음, 기본 Mock 데이터로 초기화`);
+      if (item === null || item === 'undefined' || item === '[]') {
+        console.log(`📋 localStorage에 ${key} 데이터 없음 (item: ${item}), 기본 Mock 데이터로 초기화`);
         // 초기 데이터가 없으면 기본 Mock 데이터로 초기화
         if (key === STORAGE_KEYS.TODOS) {
           console.log('📋 mockTodos로 초기화:', mockTodos.length, '개');
-          storageUtils.setItem(key, mockTodos);
+          // 🔥 CRITICAL FIX: 즉시 localStorage에 저장하고 반환
+          localStorage.setItem(key, JSON.stringify(mockTodos));
           return mockTodos as T;
         }
         if (key === STORAGE_KEYS.SCHEDULES) {
           console.log('📋 mockSchedules로 초기화:', mockSchedules.length, '개');
-          storageUtils.setItem(key, mockSchedules);
+          // 🔥 CRITICAL FIX: 즉시 localStorage에 저장하고 반환
+          localStorage.setItem(key, JSON.stringify(mockSchedules));
           return mockSchedules as T;
         }
         return defaultValue;
       }
 
       const parsed = JSON.parse(item) as T;
+
+      // 🔥 CRITICAL FIX: 빈 배열인 경우에도 mock 데이터로 초기화
+      if (Array.isArray(parsed) && parsed.length === 0) {
+        console.log(`📋 localStorage ${key}가 빈 배열임, Mock 데이터로 재초기화`);
+        if (key === STORAGE_KEYS.TODOS) {
+          console.log('📋 빈 배열 → mockTodos로 재초기화:', mockTodos.length, '개');
+          localStorage.setItem(key, JSON.stringify(mockTodos));
+          return mockTodos as T;
+        }
+        if (key === STORAGE_KEYS.SCHEDULES) {
+          console.log('📋 빈 배열 → mockSchedules로 재초기화:', mockSchedules.length, '개');
+          localStorage.setItem(key, JSON.stringify(mockSchedules));
+          return mockSchedules as T;
+        }
+      }
+
       console.log(`📋 localStorage에서 ${key} 읽기 성공:`, Array.isArray(parsed) ? `${parsed.length}개` : typeof parsed);
       return parsed;
     } catch (error) {
@@ -110,10 +128,22 @@ export const storageUtils = {
       // 오류 발생 시에도 기본 Mock 데이터 반환
       if (key === STORAGE_KEYS.TODOS) {
         console.log('📋 오류로 인한 mockTodos 사용:', mockTodos.length, '개');
+        // 🔥 CRITICAL FIX: 오류 시에도 localStorage에 저장
+        try {
+          localStorage.setItem(key, JSON.stringify(mockTodos));
+        } catch (e) {
+          console.error('localStorage 저장 중 추가 오류:', e);
+        }
         return mockTodos as T;
       }
       if (key === STORAGE_KEYS.SCHEDULES) {
         console.log('📋 오류로 인한 mockSchedules 사용:', mockSchedules.length, '개');
+        // 🔥 CRITICAL FIX: 오류 시에도 localStorage에 저장
+        try {
+          localStorage.setItem(key, JSON.stringify(mockSchedules));
+        } catch (e) {
+          console.error('localStorage 저장 중 추가 오류:', e);
+        }
         return mockSchedules as T;
       }
       return defaultValue;
