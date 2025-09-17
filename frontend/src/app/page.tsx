@@ -354,11 +354,11 @@ export default function HomePage() {
             </button>
             
             <div className="header-mobile">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                Todo Time-blocking
+              <h1 className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
+                Get things done
               </h1>
-              <p className="text-xs md:text-sm text-gray-600 hidden sm:block">
-                당신의 할 일을 명확한 일정으로 관리하세요.
+              <p className="text-sm md:text-lg text-black font-medium hidden sm:block">
+                Time-blocking을 통해 당신의 할 일을 명확한 일정으로 관리하세요
               </p>
             </div>
           </div>
