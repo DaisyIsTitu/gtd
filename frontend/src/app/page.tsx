@@ -24,9 +24,7 @@ import {
 } from '@/store';
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // E2E 테스트 환경에서는 로그 비활성화
   const isDev = process.env.NODE_ENV === 'development';
@@ -109,52 +107,74 @@ export default function HomePage() {
   // Toast notifications
   const toast = useToast();
 
-  // Combined client-side detection and data loading effect
+  // 단일 초기화 useEffect - 무한 로딩 문제 해결
   useEffect(() => {
-    if (isDev && !isE2E) {
-      console.log('🚀 통합 useEffect 실행 - 데이터 로딩');
-    }
+    const initializeApp = async () => {
+      if (isDev && !isE2E) {
+        console.log('🚀 앱 초기화 시작');
+      }
 
-    // Set client state immediately
-    setIsClient(true);
-    setMounted(true);
+      try {
+        // 데이터 로딩
+        await Promise.all([
+          fetchTodos(),
+          fetchSchedules()
+        ]);
 
-    // Load data immediately in the same effect with slight delay for SSR compatibility
-    const loadData = async () => {
-      await fetchTodos();
-      await fetchSchedules();
-      setDataLoaded(true);
+        // 🎯 CRITICAL FIX: 데이터 존재 여부 확인하여 초기화 완료 판단
+        // localStorage가 비어있어서 empty array가 반환되는 경우 대응
+        const currentState = useTodoStore.getState();
+        const hasTodos = currentState.todos && currentState.todos.length > 0;
+        const hasSchedules = currentState.schedules && currentState.schedules.length > 0;
+
+        if (isDev && !isE2E) {
+          console.log('📊 초기화 후 데이터 상태:');
+          console.log('  - todos:', currentState.todos?.length || 0, '개');
+          console.log('  - schedules:', currentState.schedules?.length || 0, '개');
+          console.log('  - hasTodos:', hasTodos);
+          console.log('  - hasSchedules:', hasSchedules);
+        }
+
+        // 🎯 localStorage 초기화가 제대로 되었는지 확인
+        // mockApi.ts의 storageUtils.getItem에서 mock data를 자동으로 설정해야 함
+        if (!hasTodos) {
+          if (isDev && !isE2E) {
+            console.warn('⚠️ 초기화 후에도 todos가 없음 - localStorage 재초기화 시도');
+          }
+
+          // 강제로 mock data 재로딩 시도
+          await fetchTodos();
+
+          // 재시도 후 상태 확인
+          const retryState = useTodoStore.getState();
+          if (isDev && !isE2E) {
+            console.log('🔄 재시도 후 todos:', retryState.todos?.length || 0, '개');
+          }
+        }
+
+        // 초기화 완료
+        setIsInitialized(true);
+
+        if (isDev && !isE2E) {
+          console.log('✅ 앱 초기화 완료');
+        }
+      } catch (error) {
+        console.error('❌ 앱 초기화 실패:', error);
+        // 실패해도 초기화 상태를 true로 설정하여 무한 로딩 방지
+        setIsInitialized(true);
+      }
     };
 
-    // Execute immediately, but also ensure it runs after hydration
-    loadData();
+    initializeApp();
 
-    // Fallback: also trigger after a small delay to ensure SSR/hydration compatibility
-    const fallbackTimer = setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        loadData();
-      }
-    }, 100);
+    // 🚨 FAILSAFE: 3초 후에 강제로 로딩 완료 처리 (5초 → 3초로 단축)
+    const failsafeTimer = setTimeout(() => {
+      console.warn('⚠️ FAILSAFE: 3초 경과로 강제 초기화 완료 처리');
+      setIsInitialized(true);
+    }, 3000);
 
-    return () => clearTimeout(fallbackTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
-
-  // WORKAROUND: Force data loading even if useEffect doesn't work (for test environments)
-  // This is a backup mechanism to ensure data loading works in Playwright tests
-  useLayoutEffect(() => {
-    const timer = setTimeout(() => {
-      if (typeof fetchTodos === 'function') {
-        fetchTodos();
-      }
-      if (typeof fetchSchedules === 'function') {
-        fetchSchedules();
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearTimeout(failsafeTimer);
+  }, []); // 한 번만 실행
 
   // Handle API errors with toast notifications
   useEffect(() => {
@@ -369,17 +389,49 @@ export default function HomePage() {
               </div>
             )}
             
-            {/* Manual Test Button */}
-            <button
-              onClick={() => {
-                fetchTodos().catch((error) => {
-                  console.error('🧪 Manual fetchTodos 오류:', error);
-                });
-              }}
-              className="inline-flex items-center px-3 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
-            >
-              🧪 테스트 (mounted: {mounted ? 'true' : 'false'})
-            </button>
+            {/* Enhanced Debug Button - 개발 환경에서만 표시 */}
+            {isDev && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    console.log('🔍 현재 상태 디버깅:');
+                    const state = useTodoStore.getState();
+                    console.log('  - todos:', state.todos?.length || 0, '개');
+                    console.log('  - schedules:', state.schedules?.length || 0, '개');
+                    console.log('  - loading:', state.loading);
+                    console.log('  - error:', state.error);
+                    console.log('  - isInitialized:', isInitialized);
+
+                    // localStorage 직접 확인
+                    try {
+                      const storedTodos = localStorage.getItem('gtd_todos');
+                      const storedSchedules = localStorage.getItem('gtd_schedules');
+                      console.log('  - localStorage todos:', storedTodos ? JSON.parse(storedTodos).length : 0, '개');
+                      console.log('  - localStorage schedules:', storedSchedules ? JSON.parse(storedSchedules).length : 0, '개');
+                    } catch (e) {
+                      console.log('  - localStorage 읽기 오류:', e);
+                    }
+                  }}
+                  className="inline-flex items-center px-2 py-1 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors"
+                >
+                  🔍
+                </button>
+
+                <button
+                  onClick={() => {
+                    console.log('🧪 수동 fetchTodos 실행');
+                    fetchTodos().then(() => {
+                      console.log('✅ fetchTodos 완료');
+                    }).catch((error) => {
+                      console.error('❌ Manual fetchTodos 오류:', error);
+                    });
+                  }}
+                  className="inline-flex items-center px-3 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                >
+                  🧪 테스트 ({isInitialized ? 'O' : 'X'})
+                </button>
+              </div>
+            )}
 
             {/* Auto Schedule Button with Enhanced Progress */}
             <div className="relative">
@@ -473,7 +525,7 @@ export default function HomePage() {
 
         {/* 캘린더 영역 */}
         <div className="flex-1 p-2 md:p-4 calendar-scroll">
-          {(loading || !dataLoaded) ? (
+          {!isInitialized ? (
             <CalendarLoadingIndicator />
           ) : (
             <WeeklyCalendar
