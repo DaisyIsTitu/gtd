@@ -60,6 +60,7 @@ export default function TodoSidebar({
   useEffect(() => {
     if (isDev && !isE2E) {
       console.log('🔄 TodoSidebar todos 변경됨:', todos?.length || 0);
+    }
   }, [todos]);
 
   const [searchTerm, setSearchTerm] = useState<string>('');
