@@ -28,11 +28,9 @@ export default function TodoList({
   onRetry,
   isLoading
 }: TodoListProps) {
-  console.log('🎯 TodoList 컴포넌트 렌더링됨!');
-  console.log('📊 받은 sortOption:', sortOption);
-  console.log('📋 받은 todos 수:', todos?.length || 0);
-  console.log('🔍 받은 todos 첫 3개:', todos?.slice(0, 3).map(t => `${t.title}(${t.priority})`) || 'none');
-  console.log('🔍 받은 todos 첫 번째 정확히:', todos?.[0] || 'undefined');
+  // E2E 테스트 환경에서는 로그 비활성화
+  const isDev = process.env.NODE_ENV === 'development';
+  const isE2E = process.env.NODE_ENV === 'test';
   // 필터링된 Todo 목록
   const filteredTodos = useMemo(() => {
     if (!todos || !Array.isArray(todos)) return [];
@@ -70,15 +68,10 @@ export default function TodoList({
 
   // 정렬된 Todo 목록
   const sortedTodos = useMemo(() => {
-    console.log('🔄 TodoList 정렬 시작');
-    console.log('📊 sortOption=', JSON.stringify(sortOption, null, 2));
-    console.log('📋 filteredTodos.length=', filteredTodos.length);
-    console.log('📝 filteredTodos titles:', filteredTodos.map(t => `${t.title}(${t.priority})`));
+    if (isDev && !isE2E) {
+      console.log('🔄 TodoList 정렬 시작, filteredTodos.length=', filteredTodos.length);
+    }
 
-    // 🚨 CRITICAL DEBUG: 정렬 로직 실행 여부 확인
-    console.log('🚨 CRITICAL: useMemo sorting logic EXECUTING');
-
-    // ⚠️ FIX: 조건을 단순화하고 항상 sortOption 처리하도록 개선
     // 기본값이 있으므로 sortOption이 없는 경우는 거의 없음
     const currentSortOption = sortOption || {
       field: 'priority' as const,
@@ -86,11 +79,6 @@ export default function TodoList({
       value: 'priority-desc',
       label: '우선순위 ↓'
     };
-
-    console.log('🚨 CRITICAL: currentSortOption=', currentSortOption);
-
-    console.log('🎯 TodoList: Using sort -', currentSortOption.field, currentSortOption.direction);
-    console.log('🔧 TodoList: Before sorting - first 3 todos:', filteredTodos.slice(0, 3).map(t => `${t.title}(${t.priority})`));
     // 정렬 처리
     const sorted = [...filteredTodos].sort((a, b) => {
       let comparison = 0;
@@ -99,7 +87,6 @@ export default function TodoList({
         case 'priority':
           const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
           comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
-          console.log(`🔢 Priority comparison: ${a.title}(${a.priority}=${priorityOrder[a.priority]}) vs ${b.title}(${b.priority}=${priorityOrder[b.priority]}) = ${comparison}`);
           break;
 
         case 'deadline':
@@ -107,14 +94,12 @@ export default function TodoList({
           const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity;
           const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity;
           comparison = aDeadline - bDeadline;
-          console.log(`📅 Deadline comparison: ${a.title}(${aDeadline}) vs ${b.title}(${bDeadline}) = ${comparison}`);
           break;
 
         case 'createdAt':
           const aCreated = new Date(a.createdAt).getTime();
           const bCreated = new Date(b.createdAt).getTime();
           comparison = aCreated - bCreated;
-          console.log(`🕒 CreatedAt comparison: ${a.title}(${a.createdAt}) vs ${b.title}(${b.createdAt}) = ${comparison}`);
           break;
 
         case 'updatedAt':
@@ -123,7 +108,6 @@ export default function TodoList({
 
         case 'title':
           comparison = a.title.localeCompare(b.title, 'ko-KR');
-          console.log(`🔤 Title comparison: ${a.title} vs ${b.title} = ${comparison}`);
           break;
 
         case 'duration':
@@ -135,12 +119,12 @@ export default function TodoList({
       }
 
       // 내림차순인 경우 결과 반전
-      const result = currentSortOption.direction === 'desc' ? -comparison : comparison;
-      console.log(`⚡ Final result (${currentSortOption.direction}): ${result}`);
-      return result;
+      return currentSortOption.direction === 'desc' ? -comparison : comparison;
     });
 
-    console.log('✅ Sorted results:', sorted.map(t => `${t.title}(${t.priority})`));
+    if (isDev && !isE2E) {
+      console.log('✅ Sorted results:', sorted.length, 'items');
+    }
     return sorted;
   }, [filteredTodos, sortOption]);
 

@@ -4,6 +4,10 @@ import { Todo, FilterOptions, CreateTodoForm, UpdateTodoForm, TodoStatus, TodoSc
 import { todoApi, schedulingApi, scheduleApi } from '@/lib/mockApi';
 import { schedulingService } from '@/lib/schedulingService';
 
+// E2E 테스트 환경에서는 로그 비활성화
+const isDev = process.env.NODE_ENV === 'development';
+const isE2E = process.env.NODE_ENV === 'test';
+
 interface TodoState {
   // State
   todos: Todo[];
@@ -83,9 +87,10 @@ export const useTodoStore = create<TodoState>()(
         // Helper function to update computed values
         updateComputedValues: () => {
           const { todos, filters } = get();
-          console.log('🔍 updateComputedValues 호출됨');
-          console.log('🔍 todos 개수:', todos.length);
-          console.log('🔍 filters:', filters);
+
+          if (isDev && !isE2E) {
+            console.log('🔍 updateComputedValues 호출됨, todos:', todos.length);
+          }
           
           // Calculate filteredTodos
           const filteredTodos = todos.filter(todo => {
@@ -140,10 +145,9 @@ export const useTodoStore = create<TodoState>()(
           // Calculate waitingTodos
           const waitingTodos = todos.filter(todo => todo.status === 'WAITING');
           
-          console.log('🔍 필터링 후 todos 개수:', filteredTodos.length);
-          console.log('🔍 활성 todos 개수:', activeTodos.length);
-          console.log('🔍 완료 todos 개수:', completedTodos.length);
-          console.log('🔍 대기 todos 개수:', waitingTodos.length);
+          if (isDev && !isE2E) {
+            console.log('🔍 필터링 결과 - 활성:', activeTodos.length, '완료:', completedTodos.length, '대기:', waitingTodos.length);
+          }
           
           set({ filteredTodos, activeTodos, completedTodos, waitingTodos }, false, 'updateComputedValues');
         },

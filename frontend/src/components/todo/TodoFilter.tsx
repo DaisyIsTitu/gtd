@@ -277,7 +277,6 @@ export default function TodoFilter({
                         key={option.value}
                         data-testid={`sort-option-${option.value}`}
                         onClick={() => {
-                          console.log('🎯 TodoFilter 정렬 옵션 클릭됨:', option);
                           onSortChange?.(option);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${

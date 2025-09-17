@@ -8,6 +8,10 @@ import { Todo, FilterOptions } from '@/types';
 import { TodoSidebarSkeleton } from '@/components/ui/TodoSkeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 
+// E2E 테스트 환경에서는 로그 비활성화
+const isDev = process.env.NODE_ENV === 'development';
+const isE2E = process.env.NODE_ENV === 'test';
+
 interface TodoSidebarProps {
   todos: Todo[];
   loading?: boolean;
@@ -26,7 +30,6 @@ const DEFAULT_SORT: SortOption = {
   direction: 'desc'
 };
 
-console.log('🔧 TodoSidebar: DEFAULT_SORT 정의됨 -', DEFAULT_SORT);
 
 export default function TodoSidebar({
   todos,
@@ -47,17 +50,16 @@ export default function TodoSidebar({
   });
   const [sortOption, setSortOption] = useState<SortOption>(DEFAULT_SORT);
 
-  console.log('🎯 TodoSidebar 렌더링됨! sortOption:', sortOption);
-  console.log('🎯 TodoSidebar todos 개수:', todos?.length || 0);
-
-  // Debug sortOption changes
+  // Debug logging for development only
   useEffect(() => {
-    console.log('🔄 TodoSidebar sortOption 변경됨:', sortOption);
+    if (isDev && !isE2E) {
+      console.log('🔄 TodoSidebar sortOption 변경됨:', sortOption);
+    }
   }, [sortOption]);
 
-  // Debug todos changes
   useEffect(() => {
-    console.log('🔄 TodoSidebar todos 변경됨:', todos?.length || 0, 'first todo:', todos?.[0]?.title || 'none');
+    if (isDev && !isE2E) {
+      console.log('🔄 TodoSidebar todos 변경됨:', todos?.length || 0);
   }, [todos]);
 
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -79,13 +81,14 @@ export default function TodoSidebar({
   // Use search results if searching, otherwise use props todos
   const todosToFilter = searchTerm ? searchResults : todos;
 
-  // 🎯 CRITICAL DEBUG: TodoSidebar에서 TodoList로 전달하는 데이터 확인
-  console.log('🎯 TodoSidebar 전달 데이터:', {
-    searchTerm,
-    'todosToFilter.length': todosToFilter.length,
-    'todosToFilter 첫 3개': todosToFilter.slice(0, 3).map(t => `${t.title}(${t.priority})`),
-    sortOption: sortOption
-  });
+  // Debug logging for development only
+  if (isDev && !isE2E) {
+    console.log('🎯 TodoSidebar 전달 데이터:', {
+      searchTerm,
+      'todosToFilter.length': todosToFilter.length,
+      sortOption: sortOption
+    });
+  }
 
   // Apply filters to the todos (search results or all todos) for counts
   const filteredTodos = todosToFilter.filter(todo => {

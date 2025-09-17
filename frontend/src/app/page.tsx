@@ -28,6 +28,10 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
+  // E2E 테스트 환경에서는 로그 비활성화
+  const isDev = process.env.NODE_ENV === 'development';
+  const isE2E = process.env.NODE_ENV === 'test';
+
   // 🔥 CRITICAL FIX: 스토어 상태를 개별적으로 구독하여 재렌더링 보장
   const fetchTodos = useTodoStore(state => state.fetchTodos);
   const fetchSchedules = useTodoStore(state => state.fetchSchedules);
@@ -41,37 +45,27 @@ export default function HomePage() {
   const storeLoading = useTodoStore(state => state.loading);
   const storeError = useTodoStore(state => state.error);
 
-  // 데이터 로딩은 useEffect에서만 처리 (중복 실행 방지)
-
-  console.log('🚀 HomePage 컴포넌트 렌더링, mounted:', mounted, ', isClient:', isClient, ', dataLoaded:', dataLoaded);
-  console.log('🚀 fetchTodos 함수 타입:', typeof fetchTodos);
-  console.log('🚀 fetchSchedules 함수 타입:', typeof fetchSchedules);
-  console.log('🚀 window 존재 여부:', typeof window !== 'undefined');
-  console.log('🔍 HomePage: storeTodos 개수:', storeTodos?.length || 0);
-  console.log('🔍 HomePage: storeTodos 직접 사용 - 무한루프 수정 완료');
-
-  // 데이터 로딩은 useEffect에서만 처리 (중복 실행 방지)
-
   // 🚀 CRITICAL FIX: 스토어 데이터를 직접 사용하고 필터링은 컴포넌트 내부에서 처리
   // useFilteredTodos 훅이 작동하지 않는 문제 우회
   const filteredTodos = useFilteredTodos();
-  console.log('🔍 HomePage: filteredTodos 개수:', filteredTodos?.length || 0);
-  console.log('🔍 HomePage: storeTodos vs filteredTodos:', (storeTodos?.length || 0), 'vs', (filteredTodos?.length || 0));
+
+  if (isDev && !isE2E) {
+    console.log('🚀 HomePage 컴포넌트 렌더링, todos:', storeTodos?.length || 0);
+  }
 
   // 🚀 ULTIMATE SOLUTION: 직접 store state 주입으로 React 재렌더링 문제 완전 우회
   // Playwright 테스트 환경에서 React 컴포넌트 구독이 실패하는 문제 해결
   const getDirectStoreData = () => {
     try {
       const currentStore = useTodoStore.getState();
-      console.log('🎯 DIRECT STORE INJECTION: store todos 개수:', currentStore.todos?.length || 0);
-      console.log('🎯 DIRECT STORE INJECTION: store filteredTodos 개수:', currentStore.filteredTodos?.length || 0);
+
+      if (isDev && !isE2E) {
+        console.log('🎯 DIRECT STORE INJECTION:', currentStore.todos?.length || 0, 'todos');
+      }
 
       // 🎯 CRITICAL FIX: filteredTodos와 todos 모두 확인하여 가장 많은 데이터 사용
       const storeData = currentStore.filteredTodos || currentStore.todos;
       if (storeData && storeData.length > 0) {
-        console.log('🎯 DIRECT STORE INJECTION: 성공! store에서 직접 데이터 주입');
-        console.log('🎯 DIRECT STORE INJECTION: 데이터 소스:', currentStore.filteredTodos ? 'filteredTodos' : 'todos');
-        console.log('🎯 DIRECT STORE INJECTION: 첫 번째 todo:', storeData[0]?.title);
         return storeData;
       }
     } catch (error) {
@@ -92,12 +86,9 @@ export default function HomePage() {
   // 🎯 SIMPLIFIED FALLBACK: storeTodos 우선, filteredTodos는 fallback
   const todos = directStoreTodos || storeTodos || filteredTodos || [];
 
-  console.log('🔍 HomePage: FINAL todos value (단순화된 소스):');
-  console.log('🔍 - directStoreTodos 개수:', directStoreTodos?.length || 0);
-  console.log('🔍 - storeTodos 개수:', storeTodos?.length || 0);
-  console.log('🔍 - filteredTodos 개수:', filteredTodos?.length || 0);
-  console.log('🔍 - FINAL todos 개수:', todos?.length || 0);
-  console.log('🔍 - FINAL todos 첫 번째:', todos?.[0]?.title || 'none');
+  if (isDev && !isE2E) {
+    console.log('🔍 HomePage: FINAL todos 개수:', todos?.length || 0);
+  }
 
   const waitingTodos = useWaitingTodos();
   // 🎯 스토어 데이터를 직접 사용하여 재렌더링 보장
@@ -120,8 +111,9 @@ export default function HomePage() {
 
   // Combined client-side detection and data loading effect
   useEffect(() => {
-    console.log('🚀 통합 useEffect 실행 - 클라이언트 감지 및 데이터 로딩');
-    console.log('🚀 window 존재 여부:', typeof window !== 'undefined');
+    if (isDev && !isE2E) {
+      console.log('🚀 통합 useEffect 실행 - 데이터 로딩');
+    }
 
     // Set client state immediately
     setIsClient(true);
@@ -129,14 +121,8 @@ export default function HomePage() {
 
     // Load data immediately in the same effect with slight delay for SSR compatibility
     const loadData = async () => {
-      console.log('🚀 즉시 데이터 로딩 시작');
-      console.log('🚀 fetchTodos 호출');
       await fetchTodos();
-      console.log('🚀 fetchTodos 완료');
-
-      console.log('🚀 fetchSchedules 호출');
       await fetchSchedules();
-      console.log('🚀 fetchSchedules 완료');
       setDataLoaded(true);
     };
 
@@ -146,7 +132,6 @@ export default function HomePage() {
     // Fallback: also trigger after a small delay to ensure SSR/hydration compatibility
     const fallbackTimer = setTimeout(() => {
       if (typeof window !== 'undefined') {
-        console.log('🔄 Fallback 데이터 로딩 실행');
         loadData();
       }
     }, 100);
@@ -158,15 +143,11 @@ export default function HomePage() {
   // WORKAROUND: Force data loading even if useEffect doesn't work (for test environments)
   // This is a backup mechanism to ensure data loading works in Playwright tests
   useLayoutEffect(() => {
-    console.log('🧪 WORKAROUND useLayoutEffect 실행');
     const timer = setTimeout(() => {
-      console.log('🧪 WORKAROUND 타이머 실행 - 데이터 강제 로딩');
       if (typeof fetchTodos === 'function') {
-        console.log('🧪 WORKAROUND fetchTodos 강제 호출');
         fetchTodos();
       }
       if (typeof fetchSchedules === 'function') {
-        console.log('🧪 WORKAROUND fetchSchedules 강제 호출');
         fetchSchedules();
       }
     }, 100);
@@ -227,26 +208,21 @@ export default function HomePage() {
 
   // Event handlers
   const handleScheduleClick = (schedule: TodoSchedule) => {
-    console.log('Schedule clicked:', schedule);
     // TODO: 스케줄 상세 모달 또는 편집 기능 구현
   };
 
   const handleTimeSlotClick = (date: Date, hour: number, minute: number) => {
-    console.log('Time slot clicked:', { date, hour, minute });
     // TODO: 새 Todo 생성 또는 드래그 앤 드롭 기능 구현
   };
 
   const handleTodoClick = (todo: any) => {
-    console.log('Todo clicked:', todo);
     editModal.open(todo);
   };
 
   const handleTodoDragStart = (e: React.DragEvent, todo: any) => {
-    console.log('Todo drag started:', todo);
-    
     // 드래그 중 스타일을 위한 클래스 추가
     e.currentTarget.classList.add('dragging');
-    
+
     // 드래그가 끝나면 클래스 제거
     setTimeout(() => {
       e.currentTarget.classList.remove('dragging');
@@ -265,10 +241,8 @@ export default function HomePage() {
   };
 
   const handleTodoUpdated = async (updatedTodo: any) => {
-    console.log('📝 handleTodoUpdated 시작:', updatedTodo);
     const success = await updateTodo(updatedTodo.id, updatedTodo);
     if (success) {
-      console.log('✅ handleTodoUpdated - 업데이트 성공');
       toast.success('할 일 수정 완료', `"${updatedTodo.title}"이(가) 수정되었습니다.`);
       editModal.close();
       // Refresh schedules as updated todos might affect display
@@ -294,7 +268,6 @@ export default function HomePage() {
   const handleAutoSchedule = async () => {
     // 강화된 중복 실행 방지
     if (isAutoScheduling || autoSchedule.loading || previewMode.isPreviewMode) {
-      console.log('🚨 자동 배치 중복 실행 방지 - isAutoScheduling:', isAutoScheduling, '로딩:', autoSchedule.loading, '미리보기:', previewMode.isPreviewMode);
       return;
     }
 
@@ -305,11 +278,9 @@ export default function HomePage() {
 
     // 실행 시작 플래그 설정
     setIsAutoScheduling(true);
-    console.log('🚀 자동 배치 시작 - waitingTodos:', waitingTodos.length);
 
     try {
       const result = await autoSchedule.autoSchedule();
-      console.log('🚀 자동 배치 결과:', result);
 
       // Enter preview mode with the scheduling result
       if (result) {
@@ -337,14 +308,11 @@ export default function HomePage() {
   };
 
   const handlePreviewRetry = async () => {
-    console.log('🔄 미리보기 재시도');
     previewMode.exitPreviewMode();
     // 자동 호출 제거 - 사용자가 직접 버튼을 클릭하도록 함
-    console.log('🔄 미리보기 모드 종료 완료. 사용자가 자동 배치 버튼을 다시 클릭해야 합니다.');
   };
 
   const handlePreviewCancel = () => {
-    console.log('❌ 미리보기 취소');
     previewMode.exitPreviewMode();
     toast.info('배치 취소', '자동 배치가 취소되었습니다.');
   };
@@ -374,11 +342,10 @@ export default function HomePage() {
         <div className="max-w-full mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* 모바일 햄버거 메뉴 */}
-            <button 
+            <button
               className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors touch-target"
               onClick={() => {
                 // TODO: 사이드바 토글 기능 구현
-                console.log('Toggle sidebar');
               }}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -405,13 +372,7 @@ export default function HomePage() {
             {/* Manual Test Button */}
             <button
               onClick={() => {
-                console.log('🧪 Manual fetchTodos 테스트 시작');
-                console.log('🧪 fetchTodos type:', typeof fetchTodos);
-                console.log('🧪 mounted:', mounted);
-
-                fetchTodos().then(() => {
-                  console.log('🧪 Manual fetchTodos 완료');
-                }).catch((error) => {
+                fetchTodos().catch((error) => {
                   console.error('🧪 Manual fetchTodos 오류:', error);
                 });
               }}
@@ -499,16 +460,6 @@ export default function HomePage() {
       {/* 메인 컨텐츠 */}
       <div className="flex h-[calc(100vh-88px)] relative">
         {/* Todo 사이드바 */}
-        {(() => {
-          console.log('🎯 ABOUT TO RENDER TodoSidebar with props:');
-          console.log('🎯 - todos:', todos);
-          console.log('🎯 - todos length:', todos?.length || 0);
-          console.log('🎯 - todos || []:', todos || []);
-          console.log('🎯 - (todos || []).length:', (todos || []).length);
-          console.log('🎯 - loading:', loading);
-          console.log('🎯 - error:', error);
-          return null;
-        })()}
         <TodoSidebar
           todos={todos || []}
           loading={loading}
