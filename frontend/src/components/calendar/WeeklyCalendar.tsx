@@ -6,6 +6,7 @@ import TimeGrid from './TimeGrid';
 import DayColumn from './DayColumn';
 import CurrentTimeIndicator from './CurrentTimeIndicator';
 import { Todo, TodoSchedule } from '@/types';
+import { CALENDAR_HOURS, isWeekend } from '@/lib/constants';
 
 interface WeeklyCalendarProps {
   schedules?: TodoSchedule[];
@@ -46,6 +47,9 @@ export default function WeeklyCalendar({
   const weekStart = getWeekStart(currentWeek);
   const weekDays = getWeekDays(weekStart);
 
+  // 캘린더 높이 계산 (시간 수 × 시간당 높이)
+  const calendarHeight = (CALENDAR_HOURS.END - CALENDAR_HOURS.START) * CALENDAR_HOURS.SLOT_HEIGHT;
+
   const handlePreviousWeek = () => {
     const newDate = new Date(currentWeek);
     newDate.setDate(newDate.getDate() - 7);
@@ -84,7 +88,7 @@ export default function WeeklyCalendar({
         onToday={handleToday}
       />
       
-      <div className="flex h-[880px] overflow-hidden">
+      <div className="flex overflow-hidden" style={{ height: `${calendarHeight}px` }}>
         {/* 시간 축 */}
         <TimeGrid />
         
@@ -101,6 +105,7 @@ export default function WeeklyCalendar({
               isToday={
                 date.toDateString() === new Date().toDateString()
               }
+              isWeekend={isWeekend(date)}
               isPreviewMode={isPreviewMode}
             />
           ))}

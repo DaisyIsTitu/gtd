@@ -1,5 +1,6 @@
 import { Todo, TodoSchedule } from '@/types';
 import TodoBlock from './TodoBlock';
+import { CALENDAR_HOURS } from '@/lib/constants';
 
 interface DayColumnProps {
   date: Date;
@@ -8,6 +9,7 @@ interface DayColumnProps {
   onScheduleClick?: (schedule: TodoSchedule) => void;
   onTimeSlotClick?: (date: Date, hour: number, minute: number) => void;
   isToday?: boolean;
+  isWeekend?: boolean;
   isPreviewMode?: boolean;
 }
 
@@ -18,22 +20,23 @@ export default function DayColumn({
   onScheduleClick,
   onTimeSlotClick,
   isToday = false,
+  isWeekend = false,
   isPreviewMode = false
 }: DayColumnProps) {
-  // 10:00 AM ~ 8:00 PM (20:00) - 11시간
-  const hours = Array.from({ length: 11 }, (_, i) => i + 10);
+  // 정책에 따른 업무 시간대 (10:00 AM ~ 8:00 PM)
+  const hours = Array.from({ length: CALENDAR_HOURS.END - CALENDAR_HOURS.START }, (_, i) => i + CALENDAR_HOURS.START);
 
   // Todo 찾기 함수
   const getTodoForSchedule = (schedule: TodoSchedule): Todo | undefined => {
     return todos.find(todo => todo.id === schedule.todoId);
   };
 
-  // 시간 위치 계산 (10:00을 기준 0으로)
+  // 시간 위치 계산 (시작 시간을 기준 0으로)
   const getTimePosition = (time: Date) => {
     const hour = time.getHours();
     const minute = time.getMinutes();
-    const relativeHour = hour - 10; // 10:00을 기준으로 상대적 시간
-    return (relativeHour * 80) + (minute / 60 * 80); // 각 시간을 80px로 설정
+    const relativeHour = hour - CALENDAR_HOURS.START; // 시작 시간을 기준으로 상대적 시간
+    return (relativeHour * CALENDAR_HOURS.SLOT_HEIGHT) + (minute / 60 * CALENDAR_HOURS.SLOT_HEIGHT);
   };
 
   // 시간 슬롯 높이 계산
@@ -45,6 +48,11 @@ export default function DayColumn({
 
   // 시간 슬롯 클릭 핸들러
   const handleTimeSlotClick = (hour: number, isHalfHour: boolean) => {
+    // 주말에는 배치 불가 (정책에 따라)
+    if (isWeekend) {
+      alert('주말에는 할 일을 자동 배치하지 않습니다.');
+      return;
+    }
     const minute = isHalfHour ? 30 : 0;
     onTimeSlotClick?.(date, hour, minute);
   };
@@ -64,34 +72,41 @@ export default function DayColumn({
   return (
     <div className={`
       flex-1 border-l border-gray-200 first:border-l-0 relative
-      ${isToday ? 'bg-primary-50/30' : 'bg-white'}
+      ${isToday ? 'bg-blue-50/50' : 'bg-white'}
     `}>
       {/* 시간 그리드 */}
       <div className="absolute inset-0">
         {hours.map((hour) => (
-          <div key={hour} className="relative h-20">
+          <div key={hour} className="relative" style={{ height: `${CALENDAR_HOURS.SLOT_HEIGHT}px` }}>
             {/* 전체 시간 슬롯 */}
-            <div 
+            <div
               className={`
-                absolute inset-0 border-b border-gray-100 cursor-pointer
-                hover:bg-blue-50 transition-colors
-                ${hasScheduleAt(hour, 0) ? '' : 'hover:bg-blue-50'}
+                absolute inset-0 border-b border-gray-100 transition-colors
+                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}
+                ${hasScheduleAt(hour, 0) || isWeekend ? '' : 'hover:bg-blue-50'}
               `}
               onClick={() => handleTimeSlotClick(hour, false)}
             />
             
             {/* 30분 슬롯 */}
-            <div 
+            <div
               className={`
-                absolute inset-x-0 top-10 h-10 border-b border-gray-100 cursor-pointer
-                hover:bg-blue-50 transition-colors
-                ${hasScheduleAt(hour, 30) ? '' : 'hover:bg-blue-50'}
+                absolute inset-x-0 border-b border-gray-100 transition-colors
+                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}
+                ${hasScheduleAt(hour, 30) || isWeekend ? '' : 'hover:bg-blue-50'}
               `}
+              style={{
+                top: `${CALENDAR_HOURS.HALF_SLOT_HEIGHT}px`,
+                height: `${CALENDAR_HOURS.HALF_SLOT_HEIGHT}px`
+              }}
               onClick={() => handleTimeSlotClick(hour, true)}
             />
-            
+
             {/* 30분 구분선 */}
-            <div className="absolute top-10 inset-x-0 h-px bg-gray-200" />
+            <div
+              className="absolute inset-x-0 h-px bg-gray-200"
+              style={{ top: `${CALENDAR_HOURS.HALF_SLOT_HEIGHT}px` }}
+            />
           </div>
         ))}
       </div>
@@ -127,10 +142,11 @@ export default function DayColumn({
         })}
       </div>
 
-      {/* 오늘 표시 (선택사항) */}
+      {/* 오늘 표시 */}
       {isToday && (
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-primary-400 rounded-b" />
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-blue-400 rounded-b" />
       )}
+
     </div>
   );
 }
