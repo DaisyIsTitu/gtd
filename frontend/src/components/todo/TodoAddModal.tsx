@@ -239,7 +239,7 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[99999] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999 }}>
       <div 
         ref={modalRef}
         className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
