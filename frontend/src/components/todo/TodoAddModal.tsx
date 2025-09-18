@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TodoCategory, TodoPriority, CreateTodoForm } from '@/types';
 
 interface TodoAddModalProps {
@@ -96,19 +97,7 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
     }
   }, [isOpen, isLoading, onClose]);
 
-  // 클릭 외부 영역 클릭시 모달 닫기
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node) && !isLoading) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen, isLoading, onClose]);
+  // 클릭 외부 영역 클릭시 모달 닫기는 이제 배경의 onClick에서 처리
 
   // 입력 변경 핸들러
   const handleInputChange = (field: keyof CreateTodoForm, value: any) => {
@@ -236,27 +225,95 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
     return `${mins}분`;
   };
 
-  if (!isOpen) return null;
+  // Framer Motion 애니메이션 변형 정의
+  const backdropVariants = {
+    hidden: {
+      opacity: 0,
+      backdropFilter: 'blur(0px)'
+    },
+    visible: {
+      opacity: 1,
+      backdropFilter: 'blur(8px)',
+      transition: {
+        duration: 0.3
+      }
+    },
+    exit: {
+      opacity: 0,
+      backdropFilter: 'blur(0px)',
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
+  const modalVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 20
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        delay: 0.1
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: -20,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-[99999] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 99999 }}>
-      <div 
-        ref={modalRef}
-        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-      >
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-[99999] overflow-y-auto bg-black/50 flex items-center justify-center p-4"
+          style={{ zIndex: 99999 }}
+          variants={backdropVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          onClick={(e) => {
+            // 배경 클릭 시에만 모달 닫기 (로딩 중이 아닐 때)
+            if (e.target === e.currentTarget && !isLoading) {
+              onClose();
+            }
+          }}
+        >
+          <motion.div
+            ref={modalRef}
+            className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            // 클릭 이벤트 전파 방지
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">새 할 일 추가</h2>
-          <button
+          <motion.button
             type="button"
             onClick={onClose}
             disabled={isLoading}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </motion.button>
         </div>
 
         {/* 모달 콘텐츠 */}
@@ -476,18 +533,22 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
 
           {/* 액션 버튼 */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
+            <motion.button
               type="button"
               onClick={onClose}
               disabled={isLoading}
               className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               취소
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
               disabled={isLoading || !formData.title.trim()}
               className="px-6 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -500,10 +561,12 @@ export default function TodoAddModal({ isOpen, onClose, onTodoCreated }: TodoAdd
               ) : (
                 '할 일 추가'
               )}
-            </button>
+            </motion.button>
           </div>
-        </form>
-      </div>
-    </div>
+          </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
