@@ -202,15 +202,15 @@ export default function TodoList({
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center py-8">
-          <div className="text-gray-400 mb-2">
+          <div className="text-gray-400 dark:text-gray-600 mb-2">
             <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {todos.length === 0 ? '할 일이 없습니다' : '필터 조건에 맞는 할 일이 없습니다'}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             {todos.length === 0 ? '새로운 할 일을 추가해보세요' : '다른 필터를 시도해보세요'}
           </p>
         </div>
@@ -223,7 +223,7 @@ export default function TodoList({
 
     return (
       <div className="mb-4">
-        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
+        <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
           <span className={`w-2 h-2 ${color} rounded-full mr-2 ${title === '놓친 할 일' ? 'animate-pulse' : ''}`}></span>
           {icon && <span className="mr-1">{icon}</span>}
           {title} ({todos.length})

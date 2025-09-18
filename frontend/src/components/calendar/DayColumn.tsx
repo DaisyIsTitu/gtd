@@ -71,8 +71,8 @@ export default function DayColumn({
 
   return (
     <div className={`
-      flex-1 border-l border-gray-200 first:border-l-0 relative
-      ${isToday ? 'bg-blue-50/50' : 'bg-white'}
+      flex-1 border-l border-gray-200 dark:border-gray-700 first:border-l-0 relative transition-colors duration-200
+      ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'}
     `}>
       {/* 시간 그리드 */}
       <div className="absolute inset-0">
@@ -81,9 +81,9 @@ export default function DayColumn({
             {/* 전체 시간 슬롯 */}
             <div
               className={`
-                absolute inset-0 border-b border-gray-100 transition-colors
-                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}
-                ${hasScheduleAt(hour, 0) || isWeekend ? '' : 'hover:bg-blue-50'}
+                absolute inset-0 border-b border-gray-100 dark:border-gray-700 transition-colors
+                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20'}
+                ${hasScheduleAt(hour, 0) || isWeekend ? '' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20'}
               `}
               onClick={() => handleTimeSlotClick(hour, false)}
             />
@@ -91,9 +91,9 @@ export default function DayColumn({
             {/* 30분 슬롯 */}
             <div
               className={`
-                absolute inset-x-0 border-b border-gray-100 transition-colors
-                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}
-                ${hasScheduleAt(hour, 30) || isWeekend ? '' : 'hover:bg-blue-50'}
+                absolute inset-x-0 border-b border-gray-100 dark:border-gray-700 transition-colors
+                ${isWeekend ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20'}
+                ${hasScheduleAt(hour, 30) || isWeekend ? '' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20'}
               `}
               style={{
                 top: `${CALENDAR_HOURS.HALF_SLOT_HEIGHT}px`,

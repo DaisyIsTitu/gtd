@@ -8,6 +8,7 @@ import NotificationSystem from '@/components/ui/NotificationSystem';
 import TodoAddModal from '@/components/todo/TodoAddModal';
 import TodoEditModal from '@/components/todo/TodoEditModal';
 import { CalendarLoadingIndicator } from '@/components/ui/CalendarSkeleton';
+import DarkModeToggle from '@/components/ui/DarkModeToggle';
 import { TodoSchedule, Todo } from '@/types';
 import { mockTodos, mockSchedules } from '@/lib/mockData';
 import {
@@ -365,7 +366,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Notification System */}
       <NotificationSystem />
 
@@ -385,36 +386,39 @@ export default function HomePage() {
       />
 
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4 transition-colors duration-200">
         <div className="max-w-full mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* 모바일 햄버거 메뉴 */}
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors touch-target"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-target"
               onClick={() => {
                 // TODO: 사이드바 토글 기능 구현
               }}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             
             <div className="header-mobile">
-              <h1 className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
+              <h1 className="text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                 Get things done
               </h1>
-              <p className="text-sm md:text-lg text-black font-medium hidden sm:block">
+              <p className="text-sm md:text-lg text-black dark:text-gray-200 font-medium hidden sm:block">
                 Time-blocking을 통해 당신의 할 일을 명확한 일정으로 관리하세요
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             {!loading && (
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 총 {todos?.length || 0}개의 할 일 {waitingTodos && waitingTodos.length > 0 && `(${waitingTodos.length}개 대기중)`}
               </div>
             )}
+
+            {/* 다크모드 토글 */}
+            <DarkModeToggle />
             
             {/* Enhanced Debug Button - 개발 환경에서만 표시 */}
             {isDev && (
@@ -439,7 +443,7 @@ export default function HomePage() {
                       console.log('  - localStorage 읽기 오류:', e);
                     }
                   }}
-                  className="inline-flex items-center px-2 py-1 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors"
+                  className="inline-flex items-center px-2 py-1 bg-gray-600 dark:bg-gray-500 text-white text-xs font-medium rounded hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
                 >
                   🔍
                 </button>
@@ -453,7 +457,7 @@ export default function HomePage() {
                       console.error('❌ Manual fetchTodos 오류:', error);
                     });
                   }}
-                  className="inline-flex items-center px-3 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                  className="inline-flex items-center px-3 py-2 bg-yellow-600 dark:bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 dark:hover:bg-yellow-600 transition-colors"
                 >
                   🧪 테스트 ({isInitialized ? 'O' : 'X'})
                 </button>
@@ -465,14 +469,14 @@ export default function HomePage() {
               <button
                 onClick={handleAutoSchedule}
                 disabled={isAutoScheduling || autoSchedule.loading || previewMode.isPreviewMode || (!waitingTodos || waitingTodos.length === 0)}
-                className={`auto-schedule-button inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${
+                className={`auto-schedule-button inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-200 ${
                   (isAutoScheduling || autoSchedule.loading)
-                    ? 'loading bg-green-500 text-white cursor-not-allowed'
+                    ? 'loading bg-green-500 dark:bg-green-600 text-white cursor-not-allowed'
                     : (previewMode.isPreviewMode)
-                    ? 'bg-orange-400 text-white cursor-not-allowed'
+                    ? 'bg-orange-400 dark:bg-orange-500 text-white cursor-not-allowed'
                     : (!waitingTodos || waitingTodos.length === 0)
-                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md focus:ring-green-500'
+                    ? 'bg-gray-400 dark:bg-gray-500 text-white cursor-not-allowed'
+                    : 'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-600 hover:shadow-md focus:ring-green-500'
                 }`}
               >
                 {(isAutoScheduling || autoSchedule.loading) ? (
@@ -506,7 +510,7 @@ export default function HomePage() {
 
               {/* Enhanced Progress Bar - 로딩 중일 때만 표시 */}
               {(isAutoScheduling || autoSchedule.loading) && (
-                <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-green-100 rounded-full overflow-hidden">
+                <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-green-100 dark:bg-green-800 rounded-full overflow-hidden">
                   <div className="h-full progress-bar-enhanced rounded-full">
                   </div>
                 </div>
@@ -515,7 +519,7 @@ export default function HomePage() {
 
             <button
               onClick={addModal.open}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
             >
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

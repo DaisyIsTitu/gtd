@@ -15,16 +15,16 @@ export default function TimeGrid() {
     const isWork = isWorkHour(hour);
     const isLunch = isLunchTime(hour);
     
-    let styles = 'h-20 border-b border-gray-200 relative transition-colors';
-    
+    let styles = 'h-20 border-b border-gray-200 dark:border-gray-700 relative transition-colors';
+
     if (isWork) {
-      styles += ' bg-blue-50/30'; // 업무 시간대 - 연한 파란색
+      styles += ' bg-blue-50/30 dark:bg-blue-900/10'; // 업무 시간대 - 연한 파란색
     } else {
-      styles += ' bg-gray-50'; // 비업무 시간대 - 회색
+      styles += ' bg-gray-50 dark:bg-gray-800/50'; // 비업무 시간대 - 회색
     }
-    
+
     if (isLunch) {
-      styles += ' bg-orange-50/50'; // 점심 시간 - 연한 주황색
+      styles += ' bg-orange-50/50 dark:bg-orange-900/10'; // 점심 시간 - 연한 주황색
     }
     
     return styles;
@@ -37,20 +37,20 @@ export default function TimeGrid() {
     let styles = 'absolute -top-2 right-2 text-xs font-medium';
     
     if (isWork) {
-      styles += ' text-blue-700'; // 업무 시간 텍스트
+      styles += ' text-blue-700 dark:text-blue-400'; // 업무 시간 텍스트
     } else {
-      styles += ' text-gray-500'; // 비업무 시간 텍스트
+      styles += ' text-gray-500 dark:text-gray-400'; // 비업무 시간 텍스트
     }
-    
+
     if (isLunch) {
-      styles += ' text-orange-600'; // 점심 시간 텍스트
+      styles += ' text-orange-600 dark:text-orange-400'; // 점심 시간 텍스트
     }
     
     return styles;
   };
 
   return (
-    <div className="w-16 flex-shrink-0 border-r border-gray-200 bg-gray-50">
+    <div className="w-16 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
       <div className="relative">
         {hours.map((hour, index) => (
           <div key={hour} className="relative">

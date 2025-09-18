@@ -79,7 +79,7 @@ export default function WeeklyCalendar({
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200">
       <CalendarHeader
         currentWeek={weekStart}
         weekDays={weekDays}

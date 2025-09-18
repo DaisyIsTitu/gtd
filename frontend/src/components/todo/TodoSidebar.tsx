@@ -154,13 +154,13 @@ export default function TodoSidebar({
   // Handle empty state
   if (todos.length === 0) {
     return (
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
-        <div className="border-b border-gray-200 p-4">
+      <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">할 일</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">할 일</h2>
             <button
               onClick={onAddTodo}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="새 할 일 추가"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,16 +171,16 @@ export default function TodoSidebar({
         </div>
         
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 mb-4 text-gray-300">
+          <div className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600">
             <svg className="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">할 일이 없습니다</h3>
-          <p className="text-sm text-gray-600 mb-4">새로운 할 일을 추가하여 시작해보세요.</p>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">할 일이 없습니다</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">새로운 할 일을 추가하여 시작해보세요.</p>
           <button
             onClick={onAddTodo}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
           >
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -189,8 +189,8 @@ export default function TodoSidebar({
           </button>
         </div>
         
-        <div className="border-t border-gray-100 p-3 text-center">
-          <div className="mt-2 w-6 h-6 bg-blue-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+        <div className="border-t border-gray-100 dark:border-gray-700 p-3 text-center">
+          <div className="mt-2 w-6 h-6 bg-blue-500 dark:bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
             {getActiveCount() > 99 ? '99+' : getActiveCount()}
           </div>
         </div>
@@ -199,16 +199,16 @@ export default function TodoSidebar({
   }
 
   return (
-    <div className="w-80 md:w-80 lg:w-80 bg-white border-r border-gray-200 flex flex-col h-full sidebar-mobile md:static">
+    <div className="w-80 md:w-80 lg:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full sidebar-mobile md:static transition-colors duration-200">
       {/* 헤더 */}
-      <div className="border-b border-gray-200 p-4">
+      <div className="border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">할 일</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">할 일</h2>
           <div className="flex items-center space-x-1">
             {/* 할 일 추가 버튼 */}
             <button
               onClick={onAddTodo}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="새 할 일 추가"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,8 +220,8 @@ export default function TodoSidebar({
             <button
               className={`p-1.5 rounded-lg transition-colors ${
                 autoScheduleLoading
-                  ? 'text-blue-600 bg-blue-50 cursor-not-allowed'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 cursor-not-allowed'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
               title={autoScheduleLoading ? "자동 배치 진행 중..." : "자동 배치"}
               onClick={onAutoSchedule}
@@ -242,11 +242,11 @@ export default function TodoSidebar({
         </div>
         
         <div className="flex items-center justify-between mt-2 text-sm">
-          <div className="flex items-center space-x-3 text-gray-600">
+          <div className="flex items-center space-x-3 text-gray-600 dark:text-gray-400">
             <span>활성: {getActiveCount()}</span>
             <span>전체: {getTotalCount()}</span>
             {searchTerm && (
-              <span data-testid="search-status" className="text-blue-600 text-xs">
+              <span data-testid="search-status" className="text-blue-600 dark:text-blue-400 text-xs">
 &quot;{searchTerm}&quot; 검색 중
               </span>
             )}
