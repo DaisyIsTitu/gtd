@@ -50,7 +50,7 @@ export default function DayColumn({
   const handleTimeSlotClick = (hour: number, isHalfHour: boolean) => {
     // 주말에는 배치 불가 (정책에 따라)
     if (isWeekend) {
-      alert('주말에는 할 일을 자동 배치하지 않습니다.');
+      alert('주말에는 할 일을 배치하지 않습니다.');
       return;
     }
     const minute = isHalfHour ? 30 : 0;
